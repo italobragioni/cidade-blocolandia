@@ -5,6 +5,7 @@
 //   "ideia"          → { handle, texto }         → envia uma ideia
 //   "votar"          → { handle, ideia_id }      → vota / tira o voto
 //   "enquete"        → { handle, opcao_id }      → vota numa opção da enquete
+//   "skin"           → { handle, skin }          → troca a roupa do boneco
 //   "admin_*"        → { senha, ... }            → painel de administração (#admin)
 // Precisa dos segredos TURNSTILE_SECRET e ADMIN_SENHA em Edge Functions → Secrets.
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -17,7 +18,7 @@ const cors = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
-const ERROS = ["handle_invalido", "nao_morador", "texto_invalido", "limite", "ideia_invalida", "enquete_encerrada"];
+const ERROS = ["handle_invalido", "nao_morador", "texto_invalido", "limite", "ideia_invalida", "enquete_encerrada", "skin_invalida"];
 const erroDe = (msg: string) => ERROS.find((e) => msg.includes(e)) ?? "banco";
 
 // compara a senha sem vazar pelo tempo de resposta
@@ -97,6 +98,11 @@ Deno.serve(async (req) => {
       const { data, error } = await sb.rpc("votar", { p_handle: handle, p_ideia: ideia });
       if (error) return json({ error: erroDe(error.message) }, 400);
       return json(data[0]);
+    }
+    if (acao === "skin") {
+      const { error } = await sb.rpc("trocar_skin", { p_handle: handle, p_skin: String(body.skin ?? "") });
+      if (error) return json({ error: erroDe(error.message) }, 400);
+      return json({ ok: true, skin: body.skin });
     }
     if (acao === "enquete") {
       const opcao = Number(body.opcao_id);

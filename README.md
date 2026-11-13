@@ -8,3 +8,4 @@ Site da @cidadeblocolandia: quem segue vira morador, ganha casa no mapa 3D e car
 - `supabase/supabase-captcha.sql` — trava: cadastro só pela função
 - `supabase/supabase-enquetes.sql` — enquetes (votação entre opções); criar com `select criar_enquete(...)`
 - `supabase/supabase-admin.sql` — painel da prefeitura (site.com/#admin), senha no segredo ADMIN_SENHA
+- `supabase/supabase-skins.sql` — roupas dos bonecos (skins)

@@ -132,6 +132,18 @@ button{font:inherit;cursor:pointer}
 .adm-item .acts{display:flex;gap:8px;flex-wrap:wrap}
 .tagx{display:inline-block;border-radius:6px;padding:1px 7px;font-size:11.5px;font-weight:800;margin-right:6px;vertical-align:1px}
 .tagx.on{background:#d8f3dc;color:#1b6b3a}.tagx.off{background:#e9ecef;color:#5c677d}
+.closet{background:#fff;border:2px solid #e6dcc4;border-radius:18px;box-shadow:0 4px 0 #e6dcc4;padding:14px;margin-top:22px;display:none}
+.closet.on{display:block}
+.closet-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.closet h3{font-size:20px;color:var(--navy)}
+.closet small{color:var(--muted);font-weight:700;font-size:12.5px}
+.skins{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.skin{border:2px solid #e6dcc4;background:linear-gradient(180deg,#e7f3ff,#cfe8ff);border-radius:12px;padding:4px 2px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:800;font-size:11.5px;color:var(--ink)}
+.skin .pic{width:100%;height:62px;display:flex;align-items:flex-end;justify-content:center}
+.skin .pic svg{height:100%;width:auto}
+.skin.on{border-color:var(--orange);box-shadow:0 0 0 3px rgba(251,133,0,.25)}
+.skin.saved::after{content:"✓ usando";font-size:10px;color:#2a9d8f}
+#skinSave{width:100%;margin-top:12px}
 .ideas-empty{text-align:center;color:var(--muted);font-weight:800;padding:30px 10px}
 .hint{font-size:13px;color:var(--muted);margin-top:12px;position:relative;z-index:2}
 .err{color:#c0392b;font-weight:800;font-size:14px;margin-top:10px;min-height:18px;position:relative;z-index:2}
@@ -250,6 +262,11 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:24px 16px 40p
         <div class="stamp">MORADOR<br>OFICIAL</div>
       </div>
       <div class="bottom"><span id="cardSince">Desde —</span><span>blocolândia ✦</span></div>
+    </div>
+    <div class="closet" id="closet">
+      <div class="closet-head"><h3>👕 Provador de roupas</h3><small id="closetHint">Toque pra provar. Depois é só salvar.</small></div>
+      <div class="skins" id="skins"></div>
+      <button class="btn green" id="skinSave" style="display:none">Salvar roupa</button>
     </div>
     <div class="actions">
       <button class="btn" id="storyBtn">📸 Postar no story</button>
@@ -444,7 +461,7 @@ async function rpc(fn, args = {}){
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
-const toRes = r => r ? { n: r.numero, h: r.handle, since: r.criado_em } : null;
+const toRes = r => r ? { n: r.numero, h: r.handle, since: r.criado_em, skin: r.skin || "casual" } : null;
 
 /* --- modo demonstração --- */
 const mem = {};
@@ -455,7 +472,7 @@ const store = {
 let registry = ONLINE ? {} : (store.get("bl_registry") || {}); // handle -> {n, since}
 const demoHandle = n => { if (n <= DEMO_COUNT) return "morador." + String(n).padStart(4,"0"); for (const [h,v] of Object.entries(registry)) if (v.n === n) return h; return null; };
 function demoFind(h){
-  if (registry[h]) return { n: registry[h].n, h, since: registry[h].since };
+  if (registry[h]) return { n: registry[h].n, h, since: registry[h].since, skin: registry[h].skin || "casual" };
   const m = h.match(/^morador\.(\d{1,4})$/); if (m){ const n = +m[1]; if (n>=1 && n<=DEMO_COUNT) return { n, h, since:null }; }
   return null;
 }
@@ -463,7 +480,7 @@ function demoFind(h){
 /* --- quem está usando este aparelho (vira o "eu" na comunidade) --- */
 let me = store.get("bl_me"); // { n, h }
 let admSenha = (() => { try { return sessionStorage.getItem("bl_adm") || ""; } catch { return ""; } })();
-const setMe = r => { me = r ? { n: r.n, h: r.h } : null; store.set("bl_me", me); };
+const setMe = r => { me = r ? { n: r.n, h: r.h, skin: r.skin || "casual" } : null; store.set("bl_me", me); };
 
 /* --- chamada à função do Supabase (sempre com captcha) --- */
 async function funcao(body){
@@ -509,6 +526,7 @@ const api = ONLINE ? {
   votar:    async id => funcao({ acao:"votar", handle: me.h, ideia_id: id }),
   enquetes: async () => (await rpc("listar_enquetes", { p_handle: me?.h || null })) || [],
   admin:    async (acao, dados = {}) => funcao({ acao: "admin_" + acao, senha: admSenha, ...dados }),
+  trocarSkin: async skin => { await funcao({ acao:"skin", handle: me.h, skin }); const c = [...cache.values()].find(r => r.h === me.h); if (c) c.skin = skin; return { skin }; },
   votarEnquete: async opcao => funcao({ acao:"enquete", handle: me.h, opcao_id: opcao }),
   find:     async h => remember(toRes((await rpc("buscar_morador", { p_handle: h }))[0])),
   byNumber: async n => cache.get(n) || remember(toRes((await rpc("morador_por_numero", { p_numero: n }))[0]))
@@ -534,6 +552,7 @@ const api = ONLINE ? {
     const id = Math.max(0, ...demoIdeas.map(i => i.id)) + 1;
     demoIdeas.push({ id, texto:t, h:me.h, n:me.n, votos:[], criado_em:new Date().toISOString(), status:"nova" }); store.set("bl_ideias", demoIdeas); return { id };
   },
+  trocarSkin: async skin => { if (!SKIN_BY[skin]) throw new Error("skin_invalida"); if (registry[me.h]){ registry[me.h].skin = skin; store.set("bl_registry", registry); } return { skin }; },
   admin:    async (acao, d = {}) => {             // modo demonstração: qualquer senha com 6+ letras entra
     if ((admSenha || "").length < 6) throw new Error("senha");
     const save = () => { store.set("bl_polls", demoPolls); store.set("bl_ideias", demoIdeas); };
@@ -584,22 +603,66 @@ const SHIRTS=["#e63946","#2a9d8f","#f4a261","#457b9d","#8338ec","#06d6a0","#ff00
 const PANTS=["#1d3557","#3d405b","#6b4f3a","#2b2d42","#495057"];
 function look(h){ const r = rng(hash(h)); const p = a => a[Math.floor(r()*a.length)];
   return { skin:p(SKINS), hair:p(HAIRS), shirt:p(SHIRTS), pants:p(PANTS), style:Math.floor(r()*3), glasses:r()<.25, wall:p(["#ffd6a5","#fdffb6","#caffbf","#9bf6ff","#a0c4ff","#ffc6ff","#ffadad","#ffffff","#e9c46a","#f1faee"]), roof:p(["#e63946","#bc4749","#264653","#6d597a","#2a9d8f","#e76f51","#355070"]) }; }
-function avatarSVG(h){
-  const L = look(h);
-  const hair = [
+/* roupas (skins). "base" muda as cores; as camadas desenham por cima.
+   costas → atrás do corpo · corpo → em cima da camisa · rosto → antes dos olhos · topo → por último */
+const R = (x,y,w,h,f,extra="") => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}" ${extra}/>`;
+const SKIN_LIST = [
+  { id:"casual",     nome:"Casual" },
+  { id:"ninja",      nome:"Ninja",      shirt:"#1b1b1b", pants:"#1b1b1b", hideHair:true, hideMouth:true, noGlasses:true,
+    rosto:() => R(24,12,52,48,"#1b1b1b") + R(28,32,44,15,"SKINC") + R(24,22,52,6,"#e63946") + R(76,22,10,4,"#e63946") + R(80,28,10,4,"#e63946"),
+    corpo:() => R(22,90,56,5,"#e63946") + R(46,60,8,30,"#2b2b2b") },
+  { id:"bombeiro",   nome:"Bombeiro",   shirt:"#d4a017", pants:"#b8860b", hideHair:true,
+    corpo:() => R(22,76,56,4,"#e9ecef") + R(22,82,56,3,"#fff200") + R(10,80,12,4,"#e9ecef") + R(78,80,12,4,"#e9ecef") + R(22,112,56,3,"#e9ecef") + R(48,60,4,40,"#8a6a0a"),
+    topo:() => R(22,4,56,16,"#d62828",'rx="7"') + R(16,17,68,5,"#a4161a",'rx="2"') + R(44,6,12,9,"#ffd166",'rx="2"') },
+  { id:"policial",   nome:"Policial",   shirt:"#1d3a8a", pants:"#14213d", hideHair:true,
+    corpo:() => R(48,60,4,20,"#0b1a2e") + R(28,66,9,10,"#ffd166",'rx="1"') + R(22,92,56,4,"#0b1a2e"),
+    topo:() => R(24,6,52,14,"#14213d",'rx="3"') + R(22,18,60,4,"#0b1a2e") + R(45,8,10,8,"#ffd166",'rx="2"') },
+  { id:"medico",     nome:"Médico",     shirt:"#f8f9fa", pants:"#38b2ac",
+    corpo:() => R(40,60,20,12,"#38b2ac") + R(49,72,2,28,"#dee2e6") + `<path d="M36 60 V72 Q36 80 44 80" fill="none" stroke="#495057" stroke-width="2.5"/><circle cx="45" cy="80" r="3.5" fill="#868e96"/>` + R(62,66,9,6,"#4dabf7",'rx="1"') },
+  { id:"astronauta", nome:"Astronauta", shirt:"#e9ecef", pants:"#dee2e6", hands:"#adb5bd",
+    corpo:() => R(36,66,28,16,"#457b9d",'rx="2"') + R(40,70,6,4,"#e63946") + R(48,70,6,4,"#ffd166") + R(56,70,4,4,"#06d6a0") + R(22,98,56,4,"#adb5bd"),
+    topo:() => `<rect x="17" y="3" width="66" height="62" rx="20" fill="rgba(168,218,255,.28)" stroke="#dee2e6" stroke-width="5"/><rect x="26" y="9" width="14" height="6" rx="3" fill="rgba(255,255,255,.7)"/>` },
+  { id:"chef",       nome:"Chef",       shirt:"#ffffff", pants:"#343a40", hideHair:true,
+    corpo:() => [66,76,86].map(y => `<circle cx="42" cy="${y}" r="2" fill="#adb5bd"/><circle cx="58" cy="${y}" r="2" fill="#adb5bd"/>`).join("") + R(22,60,56,5,"#e63946"),
+    topo:() => `<circle cx="36" cy="6" r="9" fill="#fff" stroke="#dee2e6"/><circle cx="50" cy="3" r="10" fill="#fff" stroke="#dee2e6"/><circle cx="64" cy="6" r="9" fill="#fff" stroke="#dee2e6"/>` + R(28,6,44,14,"#fff") + R(26,14,48,6,"#f1f3f5",'stroke="#dee2e6"') },
+  { id:"jogador",    nome:"Jogador",    shirt:"#ffd60a", pants:"#1d4ed8",
+    corpo:() => R(40,60,20,4,"#2b9348") + `<text x="50" y="88" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="17" fill="#2b9348">10</text>` + R(22,114,27,11,"#fff") + R(51,114,27,11,"#fff") + R(22,112,27,3,"SKINC") + R(51,112,27,3,"SKINC") },
+  { id:"heroi",      nome:"Herói",      shirt:"#1d4ed8", pants:"#1d4ed8",
+    costas:() => R(14,60,72,62,"#e63946",'rx="4"'),
+    rosto:() => R(30,33,40,13,"#e63946",'rx="3"'),
+    corpo:() => `<polygon points="50,66 61,77 50,88 39,77" fill="#ffd166"/><polygon points="50,71 53,77 50,83 47,77" fill="#e63946"/>` + R(22,94,56,5,"#ffd166") + R(22,112,27,13,"#e63946") + R(51,112,27,13,"#e63946") },
+  { id:"pirata",     nome:"Pirata",     shirt:"#ffffff", pants:"#6b4f3a", hideHair:true, noGlasses:true,
+    corpo:() => [64,74,84,94].map(y => R(22,y,56,4,"#c1121f")).join("") + [66,76,86].map(y => R(10,y,12,3,"#c1121f") + R(78,y,12,3,"#c1121f")).join("") + R(22,98,56,4,"#3d2b1f"),
+    topo:() => R(24,8,52,16,"#c1121f",'rx="3"') + R(70,14,10,6,"#c1121f") + R(74,20,8,10,"#c1121f") + `<line x1="25" y1="31" x2="75" y2="38" stroke="#111" stroke-width="2"/>` + R(54,34,13,11,"#111",'rx="2"') },
+  { id:"construtor", nome:"Construtor", shirt:"#3a86ff", pants:"#3d405b", hideHair:true,
+    corpo:() => R(22,60,18,40,"#fb8500") + R(60,60,18,40,"#fb8500") + R(22,80,18,4,"#f1f3f5") + R(60,80,18,4,"#f1f3f5") + R(22,104,56,3,"#2b2d42"),
+    topo:() => R(22,6,56,16,"#ffd60a",'rx="8"') + R(16,19,68,5,"#e0b700",'rx="2"') + R(47,4,6,16,"#e0b700") },
+  { id:"rei",        nome:"Rei",        shirt:"#9d0208", pants:"#6a040f",
+    corpo:() => R(22,60,56,8,"#fff") + [28,40,52,64].map(x => R(x,62,3,3,"#111")).join("") + R(47,68,6,32,"#ffd166") + R(10,60,12,6,"#fff") + R(78,60,12,6,"#fff"),
+    topo:() => `<polygon points="26,22 26,4 36,13 44,0 50,11 56,0 64,13 74,4 74,22" fill="#ffd166" stroke="#e0a800" stroke-width="1.5"/>` + `<circle cx="50" cy="16" r="3" fill="#e63946"/><circle cx="36" cy="18" r="2.2" fill="#3a86ff"/><circle cx="64" cy="18" r="2.2" fill="#06d6a0"/>` }
+];
+const SKIN_BY = Object.fromEntries(SKIN_LIST.map(k => [k.id, k]));
+function avatarSVG(h, skin = "casual"){
+  const L = look(h), K = SKIN_BY[skin] || SKIN_BY.casual, sk = t => (t || "").replaceAll("SKINC", L.skin);
+  const shirt = K.shirt || L.shirt, pants = K.pants || L.pants, hands = K.hands || L.skin;
+  const hair = K.hideHair ? "" : [
     `<rect x="26" y="14" width="48" height="12" fill="${L.hair}"/>`,
     `<rect x="24" y="12" width="52" height="14" fill="${L.hair}"/><rect x="24" y="26" width="8" height="18" fill="${L.hair}"/><rect x="68" y="26" width="8" height="18" fill="${L.hair}"/>`,
     `<rect x="26" y="10" width="48" height="16" rx="2" fill="${L.hair}"/><rect x="40" y="6" width="20" height="6" fill="${L.hair}"/>`][L.style];
-  const glasses = L.glasses ? `<rect x="33" y="35" width="13" height="10" fill="none" stroke="#111" stroke-width="2.5"/><rect x="54" y="35" width="13" height="10" fill="none" stroke="#111" stroke-width="2.5"/><rect x="46" y="39" width="8" height="2.5" fill="#111"/>` : "";
+  const glasses = L.glasses && !K.noGlasses ? `<rect x="33" y="35" width="13" height="10" fill="none" stroke="#111" stroke-width="2.5"/><rect x="54" y="35" width="13" height="10" fill="none" stroke="#111" stroke-width="2.5"/><rect x="46" y="39" width="8" height="2.5" fill="#111"/>` : "";
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 125" width="100%" height="100%" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+    ${sk(K.costas?.())}
+    <rect x="22" y="100" width="27" height="25" fill="${pants}"/><rect x="51" y="100" width="27" height="25" fill="${pants}"/>
+    <rect x="22" y="60" width="56" height="40" fill="${shirt}"/>
+    <rect x="10" y="60" width="12" height="34" fill="${shirt}"/><rect x="78" y="60" width="12" height="34" fill="${shirt}"/>
+    <rect x="10" y="94" width="12" height="8" fill="${hands}"/><rect x="78" y="94" width="12" height="8" fill="${hands}"/>
+    <rect x="22" y="60" width="56" height="5" fill="rgba(0,0,0,.12)"/>
+    ${sk(K.corpo?.())}
     <rect x="26" y="14" width="48" height="44" fill="${L.skin}"/>${hair}
+    ${sk(K.rosto?.())}
     <rect x="36" y="37" width="7" height="7" fill="#1b1b1b"/><rect x="57" y="37" width="7" height="7" fill="#1b1b1b"/>${glasses}
-    <rect x="42" y="49" width="16" height="3.5" fill="#7a3b2e"/>
-    <rect x="22" y="60" width="56" height="40" fill="${L.shirt}"/>
-    <rect x="10" y="60" width="12" height="34" fill="${L.shirt}"/><rect x="78" y="60" width="12" height="34" fill="${L.shirt}"/>
-    <rect x="10" y="94" width="12" height="8" fill="${L.skin}"/><rect x="78" y="94" width="12" height="8" fill="${L.skin}"/>
-    <rect x="22" y="100" width="27" height="25" fill="${L.pants}"/><rect x="51" y="100" width="27" height="25" fill="${L.pants}"/>
-    <rect x="22" y="60" width="56" height="5" fill="rgba(0,0,0,.12)"/></svg>`;
+    ${K.hideMouth ? "" : `<rect x="42" y="49" width="16" height="3.5" fill="#7a3b2e"/>`}
+    ${sk(K.topo?.())}</svg>`;
 }
 
 const fmtN = n => n.toLocaleString("pt-BR");
@@ -628,9 +691,11 @@ document.querySelector(".hero .blocks").innerHTML = [38,58,30,70,46,26,62,40,54,
 
 let current = null;
 function showCard(res, isNew){
+  trying = null;
   const { h, n } = res; const a = addressOf(n); const since = res.since ? new Date(res.since) : null;
   current = res;
-  document.getElementById("cardAvatar").innerHTML = avatarSVG(h);
+  document.getElementById("cardAvatar").innerHTML = avatarSVG(h, res.skin);
+  renderCloset();
   document.getElementById("cardNum").textContent = fmtN(n);
   document.getElementById("cardHandle").textContent = "@" + h;
   document.getElementById("cardBairro").textContent = a.bairro;
@@ -662,6 +727,28 @@ document.getElementById("copyBtn").addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(txt); toast("Convite copiado!"); } catch { toast("Não deu pra copiar aqui"); }
 });
 
+/* ================= Provador de roupas ================= */
+let trying = null;
+function renderCloset(){
+  const box = document.getElementById("closet"), mine = current && me && current.h === me.h;
+  box.classList.toggle("on", !!mine); if (!mine) return;
+  const saved = current.skin || "casual"; if (!trying) trying = saved;
+  document.getElementById("skins").innerHTML = SKIN_LIST.map(k => `<button class="skin${k.id === trying ? " on" : ""}${k.id === saved ? " saved" : ""}" data-skin="${k.id}">
+    <span class="pic">${avatarSVG(current.h, k.id)}</span>${k.nome}</button>`).join("");
+  document.getElementById("skinSave").style.display = trying !== saved ? "" : "none";
+  document.getElementById("skinSave").textContent = `Salvar roupa de ${SKIN_BY[trying].nome}`;
+}
+document.getElementById("skins").addEventListener("click", e => {
+  const b = e.target.closest(".skin"); if (!b || !current) return;
+  trying = b.dataset.skin; document.getElementById("cardAvatar").innerHTML = avatarSVG(current.h, trying); renderCloset();
+});
+document.getElementById("skinSave").addEventListener("click", async e => {
+  const btn = e.currentTarget; if (!me || !trying) return; btn.disabled = true; const label = btn.textContent; btn.textContent = "Salvando…";
+  try { await api.trocarSkin(trying); current.skin = trying; me.skin = trying; store.set("bl_me", me); renderCloset(); toast(`Agora você é ${SKIN_BY[trying].nome}! ✨`); }
+  catch(ex){ console.error(ex); toast(ex.message === "skin_invalida" ? "Essa roupa não existe 🤔" : errMsg(ex)); btn.textContent = label; }
+  finally { btn.disabled = false; }
+});
+
 /* ================= Imagem para story ================= */
 function rr(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
 function fit(ctx, text, max, size, font, weight = ""){ let s = size; do { ctx.font = `${weight} ${s}px ${font}`.trim(); s -= 2; } while (ctx.measureText(text).width > max && s > 16); }
@@ -688,7 +775,7 @@ async function makeStory(res){
   const ax = cx+50, ay = cy+170, aw = 330, ah = 420;
   const ag = x.createLinearGradient(0, ay, 0, ay+ah); ag.addColorStop(0,"#cfe8ff"); ag.addColorStop(1,"#a9d6f5");
   x.fillStyle = ag; rr(x, ax, ay, aw, ah, 30); x.fill();
-  try { const svg = avatarSVG(res.h).replace('width="100%" height="100%"', 'width="400" height="500"');
+  try { const svg = avatarSVG(res.h, res.skin).replace('width="100%" height="100%"', 'width="400" height="500"');
         const img = await loadImg("data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg));
         x.save(); rr(x, ax, ay, aw, ah, 30); x.clip(); x.drawImage(img, ax+15, ay+28, 300, 375+17); x.restore(); } catch(e){ console.error(e); }
   // dados
@@ -738,7 +825,7 @@ let aba = "semana", ideasBusy = false, ideasData = [];
 function renderMe(){
   const bar = document.getElementById("meBar");
   if (me){
-    bar.innerHTML = `<div class="mini">${avatarSVG(me.h)}</div><div class="who">@${esc(me.h)}<small>Morador nº ${fmtNice(me.n)}</small></div><button class="link" id="meSwap">trocar</button>`;
+    bar.innerHTML = `<div class="mini">${avatarSVG(me.h, me.skin)}</div><div class="who">@${esc(me.h)}<small>Morador nº ${fmtNice(me.n)}</small></div><button class="link" id="meSwap">trocar</button>`;
     document.getElementById("meSwap").onclick = () => { setMe(null); renderMe(); loadPolls(); loadIdeas(); };
   } else {
     bar.innerHTML = `<form id="meForm"><input id="meInput" placeholder="seu @ de morador pra votar" maxlength="31" autocapitalize="off" spellcheck="false"><button class="btn" type="submit">Entrar</button></form>`;
@@ -1015,7 +1102,7 @@ async function buildMap(){
     let res = null; try { res = await api.byNumber(n); } catch(e){ console.error(e); }
     if (!selected || selected.n !== n) return;
     selected.res = res;
-    document.getElementById("hcAvatar").innerHTML = avatarSVG(res ? res.h : String(n));
+    document.getElementById("hcAvatar").innerHTML = avatarSVG(res ? res.h : String(n), res?.skin);
     document.getElementById("hcHandle").textContent = res ? "@" + res.h : "Morador";
   }
   document.getElementById("closeCard").addEventListener("click", () => { selected = null; marker.visible = false; document.getElementById("houseCard").classList.remove("on"); document.getElementById("tag").style.display = "none"; document.getElementById("legend").style.display = ""; });
