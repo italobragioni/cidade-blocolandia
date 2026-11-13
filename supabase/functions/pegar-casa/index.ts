@@ -4,6 +4,7 @@
 //   "casa"  (padrão) → { handle }                → cria/devolve o morador
 //   "ideia"          → { handle, texto }         → envia uma ideia
 //   "votar"          → { handle, ideia_id }      → vota / tira o voto
+//   "enquete"        → { handle, opcao_id }      → vota numa opção da enquete
 // Precisa do segredo TURNSTILE_SECRET configurado em Edge Functions → Secrets.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -15,7 +16,7 @@ const cors = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
-const ERROS = ["handle_invalido", "nao_morador", "texto_invalido", "limite", "ideia_invalida"];
+const ERROS = ["handle_invalido", "nao_morador", "texto_invalido", "limite", "ideia_invalida", "enquete_encerrada"];
 const erroDe = (msg: string) => ERROS.find((e) => msg.includes(e)) ?? "banco";
 
 Deno.serve(async (req) => {
@@ -57,6 +58,13 @@ Deno.serve(async (req) => {
       const { data, error } = await sb.rpc("votar", { p_handle: handle, p_ideia: ideia });
       if (error) return json({ error: erroDe(error.message) }, 400);
       return json(data[0]);
+    }
+    if (acao === "enquete") {
+      const opcao = Number(body.opcao_id);
+      if (!Number.isInteger(opcao)) return json({ error: "enquete_encerrada" }, 400);
+      const { error } = await sb.rpc("votar_enquete", { p_handle: handle, p_opcao: opcao });
+      if (error) return json({ error: erroDe(error.message) }, 400);
+      return json({ ok: true });
     }
     return json({ error: "acao" }, 400);
   } catch (_e) {

@@ -84,6 +84,23 @@ button{font:inherit;cursor:pointer}
 .idea .txt{font-weight:800;font-size:16px;line-height:1.3;word-wrap:break-word}
 .idea .meta{color:var(--muted);font-size:12.5px;font-weight:700;margin-top:5px}
 .idea .rank{display:inline-block;background:var(--sun);color:var(--ink);border-radius:6px;padding:0 6px;margin-right:6px;font-family:"Lilita One";font-weight:400}
+.poll{background:#fff;border:3px solid var(--navy);border-radius:18px;box-shadow:0 5px 0 var(--navy);padding:14px;margin-bottom:16px}
+.poll.closed{border-color:#c9d2de;box-shadow:0 4px 0 #c9d2de}
+.poll-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.poll-tag{background:var(--orange);color:#fff;border-radius:8px;padding:3px 9px;font-size:12px;font-weight:800;letter-spacing:.3px}
+.poll.closed .poll-tag{background:#8d99ae}
+.poll-head small{color:var(--muted);font-weight:800;font-size:12.5px}
+.poll h3{font-size:21px;color:var(--navy);line-height:1.15;margin-bottom:10px}
+.opts{display:grid;gap:8px}
+.opt{position:relative;overflow:hidden;width:100%;text-align:left;border:2px solid var(--navy);background:#fff;border-radius:12px;padding:11px 12px;font-weight:800;font-size:15px;color:var(--ink);display:flex;justify-content:space-between;gap:10px;align-items:center}
+.opt:disabled{cursor:default}
+.opt .bar{position:absolute;inset:0 auto 0 0;background:#ffe2bf;transition:width .5s ease;z-index:0}
+.opt.mine{border-color:var(--orange)}
+.opt.mine .bar{background:#ffc98a}
+.opt.win .bar{background:#bde8c9}
+.opt span{position:relative;z-index:1}
+.opt .pct{font-family:"Lilita One";font-weight:400;font-size:17px;white-space:nowrap}
+.poll-foot{margin-top:9px;color:var(--muted);font-weight:700;font-size:12.5px}
 .ideas-empty{text-align:center;color:var(--muted);font-weight:800;padding:30px 10px}
 .hint{font-size:13px;color:var(--muted);margin-top:12px;position:relative;z-index:2}
 .err{color:#c0392b;font-weight:800;font-size:14px;margin-top:10px;min-height:18px;position:relative;z-index:2}
@@ -165,7 +182,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:24px 16px 40p
   <a class="brand" href="#inicio"><i></i>Blocolândia</a>
   <a class="tab" data-tab="inicio" href="#inicio">Início</a>
   <a class="tab" data-tab="mapa" href="#mapa">Mapa 3D</a>
-  <a class="tab" data-tab="ideias" href="#ideias">Ideias</a>
+  <a class="tab" data-tab="ideias" href="#ideias">Votar</a>
 </nav>
 
 <!-- ============ INÍCIO ============ -->
@@ -216,7 +233,7 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:24px 16px 40p
     <div class="steps">
       <div class="step"><div class="n">1</div><h3>Siga a página</h3><p>Siga a @cidadeblocolandia no Instagram ou no TikTok. É assim que a cidade sabe que você chegou.</p></div>
       <div class="step"><div class="n">2</div><h3>Pegue sua casa</h3><p>Digite seu @ aqui em cima. Você recebe um número de morador e um lote só seu no mapa.</p></div>
-      <div class="step"><div class="n">3</div><h3>Decida o próximo vídeo</h3><p>Mande ideias e vote nas dos outros moradores na aba <a href="#ideias"><b>Ideias</b></a>. As mais votadas viram episódio.</p></div>
+      <div class="step"><div class="n">3</div><h3>Decida o próximo vídeo</h3><p>Escolha nas votações e mande ideias na aba <a href="#ideias"><b>Votar</b></a>. O que ganhar vira episódio.</p></div>
     </div>
   </section>
 
@@ -237,11 +254,12 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:24px 16px 40p
 <!-- ============ IDEIAS ============ -->
 <main id="view-ideias" class="view">
   <header class="ideas-head">
-    <h1>Ideias da cidade 💡</h1>
-    <p>Os moradores decidem o que acontece nos próximos vídeos. Mande sua ideia e vote nas que você quer ver.</p>
+    <h1>Vote na cidade 🗳️</h1>
+    <p>Os moradores decidem o que acontece nos próximos vídeos. Escolha nas votações e mande suas ideias.</p>
   </header>
   <div class="ideas-wrap">
     <div class="me-bar" id="meBar"></div>
+    <div id="polls"></div>
     <form class="idea-form" id="ideaForm" autocomplete="off">
       <textarea id="ideaText" maxlength="140" rows="3" placeholder="Ex.: um episódio em que a cidade ganha um parque de diversões"></textarea>
       <div class="idea-row"><span id="ideaCount">0/140</span><button class="btn" type="submit" id="ideaSend">Mandar ideia</button></div>
@@ -392,6 +410,12 @@ let demoIdeas = ONLINE ? [] : (store.get("bl_ideias") || (() => { const d = Date
     { id:5, texto:"Construir a prefeitura no centro da cidade", h:"morador.0002", n:2, votos:v(60,9), criado_em:new Date(d-12*864e5).toISOString(), status:"feita" }
   ]; })());
 
+let demoPolls = ONLINE ? [] : (store.get("bl_polls") || (() => { const d = Date.now(); return [
+  { id:1, pergunta:"Qual vai ser o próximo episódio?", encerra_em:new Date(d+2*864e5+5*36e5).toISOString(), votos:[],
+    opcoes:[{ id:1, texto:"Parque de diversões", base:128 }, { id:2, texto:"Dia de chuva com barcos", base:97 }, { id:3, texto:"Eleição pra prefeito", base:61 }] },
+  { id:2, pergunta:"Qual cor pro novo ônibus da cidade?", encerra_em:new Date(d-864e5).toISOString(), votos:[],
+    opcoes:[{ id:4, texto:"Amarelo", base:210 }, { id:5, texto:"Azul", base:143 }] } ]; })());
+
 /* --- API única usada pelo resto da página --- */
 const cache = new Map(); // nº -> morador
 const remember = r => { if (r) cache.set(r.n, r); return r; };
@@ -406,6 +430,8 @@ const api = ONLINE ? {
   ideias:   async aba => (await rpc("listar_ideias", { p_aba: aba, p_handle: me?.h || null })).map(toIdea),
   enviarIdeia: async texto => funcao({ acao:"ideia", handle: me.h, texto }),
   votar:    async id => funcao({ acao:"votar", handle: me.h, ideia_id: id }),
+  enquetes: async () => (await rpc("listar_enquetes", { p_handle: me?.h || null })) || [],
+  votarEnquete: async opcao => funcao({ acao:"enquete", handle: me.h, opcao_id: opcao }),
   find:     async h => remember(toRes((await rpc("buscar_morador", { p_handle: h }))[0])),
   byNumber: async n => cache.get(n) || remember(toRes((await rpc("morador_por_numero", { p_numero: n }))[0]))
 } : {
@@ -429,6 +455,13 @@ const api = ONLINE ? {
     if (demoIdeas.filter(i => i.h === me.h && Date.parse(i.criado_em) > Date.now()-864e5).length >= 3) throw new Error("limite");
     const id = Math.max(0, ...demoIdeas.map(i => i.id)) + 1;
     demoIdeas.push({ id, texto:t, h:me.h, n:me.n, votos:[], criado_em:new Date().toISOString(), status:"nova" }); store.set("bl_ideias", demoIdeas); return { id };
+  },
+  enquetes: async () => demoPolls.map(e => ({ ...e, aberta: Date.parse(e.encerra_em) > Date.now(),
+    meu_voto: me ? (e.votos.find(v => v.h === me.h)?.o ?? null) : null,
+    opcoes: e.opcoes.map(o => ({ id:o.id, texto:o.texto, votos: o.base + e.votos.filter(v => v.o === o.id).length })) })),
+  votarEnquete: async opcao => {
+    const e = demoPolls.find(x => x.opcoes.some(o => o.id === opcao)); if (!e || Date.parse(e.encerra_em) <= Date.now()) throw new Error("enquete_encerrada");
+    e.votos = e.votos.filter(v => v.h !== me.h); e.votos.push({ h: me.h, o: opcao }); store.set("bl_polls", demoPolls); return { ok:true };
   },
   votar:    async id => {
     const i = demoIdeas.find(x => x.id === id); if (!i || i.status !== "nova") throw new Error("ideia_invalida");
@@ -610,7 +643,7 @@ function renderMe(){
   const bar = document.getElementById("meBar");
   if (me){
     bar.innerHTML = `<div class="mini">${avatarSVG(me.h)}</div><div class="who">@${esc(me.h)}<small>Morador nº ${fmtNice(me.n)}</small></div><button class="link" id="meSwap">trocar</button>`;
-    document.getElementById("meSwap").onclick = () => { setMe(null); renderMe(); loadIdeas(); };
+    document.getElementById("meSwap").onclick = () => { setMe(null); renderMe(); loadPolls(); loadIdeas(); };
   } else {
     bar.innerHTML = `<form id="meForm"><input id="meInput" placeholder="seu @ de morador pra votar" maxlength="31" autocapitalize="off" spellcheck="false"><button class="btn" type="submit">Entrar</button></form>`;
     document.getElementById("meForm").onsubmit = async e => {
@@ -618,7 +651,7 @@ function renderMe(){
       if (!validHandle(h)) { toast("Digite um @ válido"); return; }
       try { const r = await api.find(h);
         if (!r) { toast("Esse @ ainda não é morador. Pegue sua casa primeiro!"); setTimeout(() => { location.hash = "inicio"; document.getElementById("handleHome").value = h; }, 1200); return; }
-        setMe(r); renderMe(); loadIdeas();
+        setMe(r); renderMe(); loadPolls(); loadIdeas();
       } catch(ex){ console.error(ex); toast(errMsg(ex)); }
     };
   }
@@ -639,7 +672,36 @@ async function loadIdeas(){
   try { const d = await api.ideias(want); if (want !== aba) return; ideasData = d; renderIdeas(); }
   catch(ex){ console.error(ex); list.innerHTML = `<div class="ideas-empty">Não deu pra carregar agora. Tenta de novo daqui a pouco.</div>`; }
 }
-function openIdeas(){ renderMe(); loadIdeas(); }
+function left(ms){ const m = (ms - Date.now())/6e4; if (m < 60) return `termina em ${Math.max(1, Math.ceil(m))} min`;
+  const h = m/60; if (h < 24) return `termina em ${Math.ceil(h)} h`; const d = Math.ceil(h/24); return `termina em ${d} dia${d > 1 ? "s" : ""}`; }
+let polls = [], pollBusy = false;
+function renderPolls(){
+  const box = document.getElementById("polls");
+  box.innerHTML = polls.map(e => {
+    const total = e.opcoes.reduce((a,o) => a + +o.votos, 0), show = !e.aberta || e.meu_voto != null;
+    const max = Math.max(...e.opcoes.map(o => +o.votos));
+    return `<div class="poll${e.aberta ? "" : " closed"}">
+      <div class="poll-head"><span class="poll-tag">${e.aberta ? "🗳️ VOTAÇÃO ABERTA" : "ENCERRADA"}</span><small>${e.aberta ? left(Date.parse(e.encerra_em)) : "resultado final"}</small></div>
+      <h3>${esc(e.pergunta)}</h3>
+      <div class="opts">${e.opcoes.map(o => { const pct = total ? Math.round(100 * o.votos / total) : 0, mine = e.meu_voto === o.id, win = !e.aberta && total && +o.votos === max;
+        return `<button class="opt${mine ? " mine" : ""}${win ? " win" : ""}" data-op="${o.id}" ${e.aberta ? "" : "disabled"}>
+          ${show ? `<i class="bar" style="width:${pct}%"></i>` : ""}<span>${win ? "🏆 " : ""}${mine ? "✓ " : ""}${esc(o.texto)}</span>${show ? `<span class="pct">${pct}%</span>` : ""}</button>`; }).join("")}</div>
+      <div class="poll-foot">${fmtNice(total)} voto${total === 1 ? "" : "s"}${e.aberta ? (e.meu_voto != null ? " · toque em outra opção pra mudar seu voto" : " · vote pra ver o resultado") : ""}</div>
+    </div>`; }).join("");
+}
+async function loadPolls(){ try { polls = await api.enquetes(); renderPolls(); } catch(ex){ console.error(ex); } }
+document.getElementById("polls").addEventListener("click", async e => {
+  const b = e.target.closest(".opt"); if (!b || b.disabled || pollBusy) return;
+  if (!me){ toast("Entre com seu @ de morador pra votar 👆"); document.getElementById("meInput")?.focus(); return; }
+  const op = +b.dataset.op, poll = polls.find(p => p.opcoes.some(o => o.id === op)); if (!poll || poll.meu_voto === op) return;
+  const before = JSON.parse(JSON.stringify(poll));
+  poll.opcoes.forEach(o => { if (o.id === poll.meu_voto) o.votos--; if (o.id === op) o.votos++; }); poll.meu_voto = op; renderPolls();   // atualiza na hora
+  pollBusy = true;
+  try { await api.votarEnquete(op); toast("Voto registrado! 🗳️"); loadPolls(); }
+  catch(ex){ console.error(ex); Object.assign(poll, before); renderPolls(); toast(ex.message === "enquete_encerrada" ? "Essa votação já encerrou." : errMsg(ex)); if (ex.message === "nao_morador"){ setMe(null); renderMe(); } }
+  finally { pollBusy = false; }
+});
+function openIdeas(){ renderMe(); loadPolls(); loadIdeas(); }
 
 document.querySelectorAll(".ideas-tabs button").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll(".ideas-tabs button").forEach(x => x.classList.toggle("on", x === b));
