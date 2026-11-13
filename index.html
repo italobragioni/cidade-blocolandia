@@ -101,6 +101,37 @@ button{font:inherit;cursor:pointer}
 .opt span{position:relative;z-index:1}
 .opt .pct{font-family:"Lilita One";font-weight:400;font-size:17px;white-space:nowrap}
 .poll-foot{margin-top:9px;color:var(--muted);font-weight:700;font-size:12.5px}
+.adm{max-width:600px;margin:0 auto;padding:22px 16px 60px}
+.adm h1{font-size:32px;color:var(--navy)}
+.adm h2{font-size:22px;color:var(--navy);margin:26px 0 10px}
+.adm-login{text-align:center;padding-top:30px}
+.adm-login p{color:var(--muted);font-weight:700;margin:6px 0 18px}
+.adm-login form{display:flex;gap:8px;max-width:360px;margin:0 auto}
+.adm-login input,.adm-card input,.adm-card select{flex:1;min-width:0;width:100%;border:2px solid #cfd8e3;border-radius:12px;padding:11px 12px;font:inherit;font-size:16px;font-weight:700;background:#fff;color:var(--ink)}
+.adm-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.btn.sm{padding:7px 11px;font-size:14px;box-shadow:0 3px 0 var(--navy)}
+.btn.red{background:#e63946;box-shadow:0 3px 0 #9d1d28;color:#fff}
+.btn.green{background:#2a9d8f;box-shadow:0 3px 0 #1b6b61;color:#fff}
+.adm-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+.stat{background:#fff;border:2px solid #e6dcc4;border-radius:16px;padding:12px 14px;box-shadow:0 3px 0 #e6dcc4}
+.stat b{display:block;font-family:"Lilita One";font-weight:400;font-size:30px;color:var(--orange);line-height:1.1}
+.stat span{color:var(--muted);font-weight:800;font-size:13px}
+.adm-card{background:#fff;border:3px solid var(--navy);border-radius:18px;box-shadow:0 5px 0 var(--navy);padding:14px;display:grid;gap:8px}
+.adm-card label{font-weight:800;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px}
+.adm-card label small{text-transform:none;letter-spacing:0}
+.op-row{display:flex;gap:6px;margin-bottom:6px}
+.op-row button{flex:none;width:42px;border:2px solid #cfd8e3;background:#fff;border-radius:12px;font-size:18px;color:var(--muted)}
+.adm-card .btn[type=submit]{margin-top:6px}
+.adm-item{background:#fff;border:2px solid #e6dcc4;border-radius:16px;padding:12px;margin-bottom:10px;box-shadow:0 3px 0 #e6dcc4}
+.adm-item .q{font-weight:800;font-size:16px}
+.adm-item .meta{color:var(--muted);font-size:12.5px;font-weight:700;margin:3px 0 8px}
+.adm-item .res{display:grid;gap:5px;margin-bottom:10px}
+.adm-item .res div{position:relative;border-radius:9px;background:#f1f4f8;padding:6px 10px;font-weight:800;font-size:14px;display:flex;justify-content:space-between;overflow:hidden}
+.adm-item .res i{position:absolute;inset:0 auto 0 0;background:#ffe2bf;z-index:0}
+.adm-item .res span{position:relative;z-index:1}
+.adm-item .acts{display:flex;gap:8px;flex-wrap:wrap}
+.tagx{display:inline-block;border-radius:6px;padding:1px 7px;font-size:11.5px;font-weight:800;margin-right:6px;vertical-align:1px}
+.tagx.on{background:#d8f3dc;color:#1b6b3a}.tagx.off{background:#e9ecef;color:#5c677d}
 .ideas-empty{text-align:center;color:var(--muted);font-weight:800;padding:30px 10px}
 .hint{font-size:13px;color:var(--muted);margin-top:12px;position:relative;z-index:2}
 .err{color:#c0392b;font-weight:800;font-size:14px;margin-top:10px;min-height:18px;position:relative;z-index:2}
@@ -275,6 +306,51 @@ footer{text-align:center;color:var(--muted);font-size:13px;padding:24px 16px 40p
   <footer>Cada morador pode mandar até 3 ideias por dia. Ideias que viram vídeo aparecem em “Feitas”.</footer>
 </main>
 
+<!-- ============ ADMIN (link escondido: /#admin) ============ -->
+<main id="view-admin" class="view">
+  <div class="adm">
+    <div class="adm-login" id="admLogin">
+      <h1>Prefeitura 🏛️</h1>
+      <p>Área do prefeito da Blocolândia.</p>
+      <form id="admLoginForm" autocomplete="off">
+        <input id="admSenha" type="password" placeholder="Senha" autocomplete="current-password">
+        <button class="btn" type="submit">Entrar</button>
+      </form>
+      <div class="err" id="admLoginErr"></div>
+    </div>
+
+    <div id="admPanel" style="display:none">
+      <div class="adm-top"><h1>Prefeitura 🏛️</h1><div><button class="btn ghost sm" id="admRefresh">↻ Atualizar</button> <button class="btn ghost sm" id="admSair">Sair</button></div></div>
+      <div class="adm-stats" id="admStats"></div>
+
+      <h2>Nova votação</h2>
+      <form class="adm-card" id="admPollForm" autocomplete="off">
+        <label>Pergunta</label>
+        <input id="admPergunta" maxlength="140" placeholder="Qual vai ser o próximo episódio?">
+        <label>Opções <small>(de 2 a 6)</small></label>
+        <div id="admOpcoes"></div>
+        <button type="button" class="btn ghost sm" id="admAddOp">+ opção</button>
+        <label>Fica aberta por</label>
+        <select id="admDias">
+          <option value="0.25">6 horas</option><option value="1">1 dia</option><option value="2">2 dias</option>
+          <option value="3" selected>3 dias</option><option value="5">5 dias</option><option value="7">7 dias</option>
+        </select>
+        <button class="btn" type="submit" id="admCriar">Publicar votação</button>
+        <div class="err" id="admPollErr"></div>
+      </form>
+
+      <h2>Votações</h2>
+      <div id="admPolls"></div>
+
+      <h2>Ideias dos moradores</h2>
+      <div class="ideas-tabs" id="admIdeaTabs">
+        <button data-st="nova" class="on">🆕 Novas</button><button data-st="feita">🎬 Viraram vídeo</button><button data-st="oculta">🙈 Ocultas</button>
+      </div>
+      <div id="admIdeas"></div>
+    </div>
+  </div>
+</main>
+
 <div id="captcha" class="captcha"></div>
 <div id="toast" class="toast"></div>
 
@@ -386,6 +462,7 @@ function demoFind(h){
 
 /* --- quem está usando este aparelho (vira o "eu" na comunidade) --- */
 let me = store.get("bl_me"); // { n, h }
+let admSenha = (() => { try { return sessionStorage.getItem("bl_adm") || ""; } catch { return ""; } })();
 const setMe = r => { me = r ? { n: r.n, h: r.h } : null; store.set("bl_me", me); };
 
 /* --- chamada à função do Supabase (sempre com captcha) --- */
@@ -431,6 +508,7 @@ const api = ONLINE ? {
   enviarIdeia: async texto => funcao({ acao:"ideia", handle: me.h, texto }),
   votar:    async id => funcao({ acao:"votar", handle: me.h, ideia_id: id }),
   enquetes: async () => (await rpc("listar_enquetes", { p_handle: me?.h || null })) || [],
+  admin:    async (acao, dados = {}) => funcao({ acao: "admin_" + acao, senha: admSenha, ...dados }),
   votarEnquete: async opcao => funcao({ acao:"enquete", handle: me.h, opcao_id: opcao }),
   find:     async h => remember(toRes((await rpc("buscar_morador", { p_handle: h }))[0])),
   byNumber: async n => cache.get(n) || remember(toRes((await rpc("morador_por_numero", { p_numero: n }))[0]))
@@ -455,6 +533,23 @@ const api = ONLINE ? {
     if (demoIdeas.filter(i => i.h === me.h && Date.parse(i.criado_em) > Date.now()-864e5).length >= 3) throw new Error("limite");
     const id = Math.max(0, ...demoIdeas.map(i => i.id)) + 1;
     demoIdeas.push({ id, texto:t, h:me.h, n:me.n, votos:[], criado_em:new Date().toISOString(), status:"nova" }); store.set("bl_ideias", demoIdeas); return { id };
+  },
+  admin:    async (acao, d = {}) => {             // modo demonstração: qualquer senha com 6+ letras entra
+    if ((admSenha || "").length < 6) throw new Error("senha");
+    const save = () => { store.set("bl_polls", demoPolls); store.set("bl_ideias", demoIdeas); };
+    if (acao === "painel") return {
+      moradores: DEMO_COUNT + Object.keys(registry).length, moradores_hoje: Object.keys(registry).length, ideias_novas: demoIdeas.filter(i => i.status === "nova").length,
+      votos_hoje: demoPolls.reduce((a,e) => a + e.votos.length, 0),
+      enquetes: demoPolls.map(e => ({ id:e.id, pergunta:e.pergunta, encerra_em:e.encerra_em, aberta: Date.parse(e.encerra_em) > Date.now(),
+        opcoes: e.opcoes.map(o => ({ id:o.id, texto:o.texto, votos:o.base + e.votos.filter(v => v.o === o.id).length })) }))
+        .sort((a,b) => b.aberta - a.aberta || b.id - a.id),
+      ideias: demoIdeas.map(i => ({ id:i.id, texto:i.texto, status:i.status, criado_em:i.criado_em, handle:i.h, numero:i.n, votos:i.votos.length })) };
+    if (acao === "criar_enquete"){ let nid = Math.max(0, ...demoPolls.flatMap(e => e.opcoes.map(o => o.id)));
+      const id = Math.max(0, ...demoPolls.map(e => e.id)) + 1;
+      demoPolls.unshift({ id, pergunta:d.pergunta, encerra_em:new Date(Date.now() + d.dias*864e5).toISOString(), votos:[], opcoes:d.opcoes.map(t => ({ id: ++nid, texto:t, base:0 })) }); save(); return { id }; }
+    if (acao === "encerrar_enquete"){ const e = demoPolls.find(x => x.id === d.id); if (e && Date.parse(e.encerra_em) > Date.now()) e.encerra_em = new Date().toISOString(); save(); return { ok:true }; }
+    if (acao === "apagar_enquete"){ demoPolls = demoPolls.filter(x => x.id !== d.id); save(); return { ok:true }; }
+    if (acao === "status_ideia"){ const i = demoIdeas.find(x => x.id === d.id); if (i) i.status = d.status; save(); return { ok:true }; }
   },
   enquetes: async () => demoPolls.map(e => ({ ...e, aberta: Date.parse(e.encerra_em) > Date.now(),
     meu_voto: me ? (e.votos.find(v => v.h === me.h)?.o ?? null) : null,
@@ -514,11 +609,12 @@ const fmtNice = n => n.toLocaleString("pt-BR");
 let pendingFocus = null;
 function route(){
   const v = (location.hash.replace("#","") || "inicio");
-  const view = ["mapa","ideias"].includes(v) ? v : "inicio";
+  const view = ["mapa","ideias","admin"].includes(v) ? v : "inicio";
   document.querySelectorAll(".view").forEach(e => e.classList.toggle("on", e.id === "view-"+view));
   document.querySelectorAll(".nav a.tab[data-tab]").forEach(a => a.classList.toggle("on", a.dataset.tab === view));
   if (view === "mapa") openMap(); else window.scrollTo(0,0);
   if (view === "ideias") openIdeas();
+  if (view === "admin") openAdmin();
 }
 addEventListener("hashchange", route);
 
@@ -731,6 +827,86 @@ document.getElementById("ideaForm").addEventListener("submit", async e => {
     document.querySelectorAll(".ideas-tabs button").forEach(x => x.classList.toggle("on", x.dataset.aba === "novas")); aba = "novas"; ideasData = []; loadIdeas();
   } catch(ex){ console.error(ex); err.textContent = errMsg(ex); }
   finally { btn.disabled = false; btn.textContent = "Mandar ideia"; }
+});
+
+/* ================= Prefeitura (admin) ================= */
+let adm = null, admSt = "nova", admBusy = false;
+const admErr = ex => ex?.message === "senha" ? "Senha errada." : ex?.message === "captcha" ? ERR_MSG.captcha : "Não deu certo agora. Tenta de novo.";
+function admSetSenha(v){ admSenha = v; try { v ? sessionStorage.setItem("bl_adm", v) : sessionStorage.removeItem("bl_adm"); } catch {} }
+function admShow(logged){ document.getElementById("admLogin").style.display = logged ? "none" : ""; document.getElementById("admPanel").style.display = logged ? "" : "none"; }
+async function admLoad(){
+  try { adm = await api.admin("painel"); admShow(true); admRender(); return true; }
+  catch(ex){ console.error(ex); if (ex.message === "senha"){ admSetSenha(""); admShow(false); } toast(admErr(ex)); return false; }
+}
+function openAdmin(){ admOps(); if (admSenha) admLoad(); else admShow(false); }
+function admOps(vals){
+  const box = document.getElementById("admOpcoes"); const cur = vals || [...box.querySelectorAll("input")].map(i => i.value);
+  const list = cur.length >= 2 ? cur : [...cur, "", ""].slice(0, Math.max(2, cur.length));
+  box.innerHTML = list.map((v,k) => `<div class="op-row"><input maxlength="80" placeholder="Opção ${k+1}" value="${esc(v)}">${list.length > 2 ? `<button type="button" data-rm="${k}" aria-label="Remover">×</button>` : ""}</div>`).join("");
+  document.getElementById("admAddOp").style.display = list.length >= 6 ? "none" : "";
+}
+document.getElementById("admOpcoes").addEventListener("click", e => { const k = e.target.dataset.rm; if (k == null) return;
+  const vals = [...document.querySelectorAll("#admOpcoes input")].map(i => i.value); vals.splice(+k, 1); admOps(vals); });
+document.getElementById("admAddOp").addEventListener("click", () => { const vals = [...document.querySelectorAll("#admOpcoes input")].map(i => i.value); if (vals.length < 6){ vals.push(""); admOps(vals); document.querySelector("#admOpcoes .op-row:last-child input").focus(); } });
+
+function admRender(){
+  if (!adm) return;
+  document.getElementById("admStats").innerHTML = [["moradores","moradores"],["moradores_hoje","novos moradores (24h)"],["ideias_novas","ideias novas"],["votos_hoje","votos (24h)"]]
+    .map(([k,l]) => `<div class="stat"><b>${fmtNice(+adm[k] || 0)}</b><span>${l}</span></div>`).join("");
+  document.getElementById("admPolls").innerHTML = adm.enquetes.length ? adm.enquetes.map(e => {
+    const total = (e.opcoes || []).reduce((a,o) => a + +o.votos, 0);
+    return `<div class="adm-item"><div class="q"><span class="tagx ${e.aberta ? "on" : "off"}">${e.aberta ? "ABERTA" : "ENCERRADA"}</span>${esc(e.pergunta)}</div>
+      <div class="meta">${fmtNice(total)} votos · ${e.aberta ? left(Date.parse(e.encerra_em)) : "encerrou " + ago(Date.parse(e.encerra_em))}</div>
+      <div class="res">${(e.opcoes || []).map(o => { const pct = total ? Math.round(100 * o.votos / total) : 0;
+        return `<div><i style="width:${pct}%"></i><span>${esc(o.texto)}</span><span>${fmtNice(+o.votos)} · ${pct}%</span></div>`; }).join("")}</div>
+      <div class="acts">${e.aberta ? `<button class="btn navy sm" data-enc="${e.id}">Encerrar agora</button>` : ""}<button class="btn red sm" data-del="${e.id}">Apagar</button></div></div>`; }).join("")
+    : `<div class="ideas-empty">Nenhuma votação ainda. Crie a primeira aí em cima 👆</div>`;
+  const ideas = adm.ideias.filter(i => i.status === admSt).sort((a,b) => admSt === "nova" ? (b.votos - a.votos || Date.parse(b.criado_em) - Date.parse(a.criado_em)) : Date.parse(b.criado_em) - Date.parse(a.criado_em));
+  document.getElementById("admIdeas").innerHTML = ideas.length ? ideas.map(i => `<div class="adm-item"><div class="q">${esc(i.texto)}</div>
+      <div class="meta">▲ ${fmtNice(+i.votos)} votos · @${esc(i.handle)} · nº ${fmtNice(i.numero)} · ${ago(Date.parse(i.criado_em))}</div>
+      <div class="acts">${i.status !== "feita" ? `<button class="btn green sm" data-id="${i.id}" data-st="feita">🎬 Virou vídeo</button>` : ""}
+        ${i.status !== "oculta" ? `<button class="btn red sm" data-id="${i.id}" data-st="oculta">🙈 Ocultar</button>` : ""}
+        ${i.status !== "nova" ? `<button class="btn ghost sm" data-id="${i.id}" data-st="nova">↩️ Voltar pra novas</button>` : ""}</div></div>`).join("")
+    : `<div class="ideas-empty">Nada aqui.</div>`;
+}
+async function admDo(acao, dados, okMsg){
+  if (admBusy) return; admBusy = true; document.querySelectorAll("#view-admin .adm-item button").forEach(b => b.disabled = true);
+  try { await api.admin(acao, dados); toast(okMsg); await admLoad(); }
+  catch(ex){ console.error(ex); toast(admErr(ex)); admRender(); }
+  finally { admBusy = false; }
+}
+let delArm = null;
+document.getElementById("admPolls").addEventListener("click", e => {
+  const enc = e.target.closest("[data-enc]"), del = e.target.closest("[data-del]");
+  if (enc) admDo("encerrar_enquete", { id: +enc.dataset.enc }, "Votação encerrada ✅");
+  if (del){
+    if (delArm !== del.dataset.del){ delArm = del.dataset.del; del.textContent = "Toque de novo pra apagar"; setTimeout(() => { if (delArm === del.dataset.del){ delArm = null; del.textContent = "Apagar"; } }, 3500); return; }
+    delArm = null; admDo("apagar_enquete", { id: +del.dataset.del }, "Votação apagada 🗑️");
+  }
+});
+document.getElementById("admIdeas").addEventListener("click", e => { const b = e.target.closest("[data-st]"); if (!b) return;
+  admDo("status_ideia", { id: +b.dataset.id, status: b.dataset.st }, { feita:"Marcada como vídeo 🎬", oculta:"Ideia ocultada 🙈", nova:"Voltou pras novas ↩️" }[b.dataset.st]); });
+document.querySelectorAll("#admIdeaTabs button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("#admIdeaTabs button").forEach(x => x.classList.toggle("on", x === b)); admSt = b.dataset.st; admRender(); }));
+document.getElementById("admLoginForm").addEventListener("submit", async e => {
+  e.preventDefault(); const v = document.getElementById("admSenha").value, err = document.getElementById("admLoginErr"), btn = e.target.querySelector("button");
+  if (!v){ err.textContent = "Digite a senha."; return; }
+  err.textContent = ""; btn.disabled = true; btn.textContent = "Entrando…"; admSetSenha(v);
+  const ok = await admLoad(); btn.disabled = false; btn.textContent = "Entrar";
+  if (ok) document.getElementById("admSenha").value = ""; else err.textContent = document.getElementById("toast").textContent;
+});
+document.getElementById("admSair").addEventListener("click", () => { admSetSenha(""); adm = null; admShow(false); });
+document.getElementById("admRefresh").addEventListener("click", async () => { if (await admLoad()) toast("Atualizado"); });
+document.getElementById("admPollForm").addEventListener("submit", async e => {
+  e.preventDefault(); const err = document.getElementById("admPollErr"), btn = document.getElementById("admCriar");
+  const pergunta = document.getElementById("admPergunta").value.trim(), opcoes = [...document.querySelectorAll("#admOpcoes input")].map(i => i.value.trim()).filter(Boolean);
+  if (pergunta.length < 3){ err.textContent = "Escreva a pergunta."; return; }
+  if (opcoes.length < 2){ err.textContent = "Coloque pelo menos 2 opções."; return; }
+  err.textContent = ""; btn.disabled = true; btn.textContent = "Publicando…";
+  try { await api.admin("criar_enquete", { pergunta, opcoes, dias: +document.getElementById("admDias").value });
+    document.getElementById("admPergunta").value = ""; admOps(["",""]); toast("Votação publicada! 🗳️"); await admLoad(); }
+  catch(ex){ console.error(ex); err.textContent = admErr(ex); }
+  finally { btn.disabled = false; btn.textContent = "Publicar votação"; }
 });
 
 /* ================= Mapa 3D ================= */
