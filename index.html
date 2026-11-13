@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1d3557">
+<title>Cidade Blocolândia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1d3557; --sky:#8ecae6; --sun:#ffb703; --orange:#fb8500; --grass:#57cc99;
+  --cream:#fff8e7; --ink:#14213d; --muted:#5c677d; --white:#fff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:Nunito,system-ui,sans-serif;background:var(--cream);color:var(--ink);-webkit-font-smoothing:antialiased}
+h1,h2,h3,.brand,.btn,.card-title,.num{font-family:"Lilita One",Nunito,sans-serif;font-weight:400;letter-spacing:.3px}
+a{color:inherit}
+button{font:inherit;cursor:pointer}
+
+/* nav */
+.nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:6px;padding:10px 14px;background:var(--navy);color:#fff}
+.brand{font-size:20px;display:flex;align-items:center;gap:8px;margin-right:auto;text-decoration:none}
+.brand i{width:22px;height:22px;background:var(--sun);border-radius:5px;box-shadow:inset -5px -5px 0 var(--orange);display:inline-block}
+.nav a.tab{white-space:nowrap;padding:7px 12px;border-radius:10px;text-decoration:none;font-weight:800;font-size:14px;opacity:.8}
+.nav a.tab.on{background:rgba(255,255,255,.14);opacity:1}
+.nav .soon{font-size:10px;background:var(--sun);color:var(--ink);border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:2px}
+
+.view{display:none}
+.view.on{display:block}
+
+/* hero */
+.hero{background:linear-gradient(180deg,var(--sky) 0%,#bde0fe 70%,var(--cream) 100%);padding:44px 18px 30px;text-align:center;position:relative;overflow:hidden}
+.hero .blocks{position:absolute;inset:auto 0 0 0;height:70px;display:flex;align-items:flex-end;justify-content:center;gap:6px;opacity:.55;pointer-events:none}
+.hero .blocks span{width:34px;background:var(--navy);border-radius:4px 4px 0 0}
+.pill{display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:999px;padding:6px 14px;font-weight:800;font-size:14px;box-shadow:0 3px 0 rgba(0,0,0,.08)}
+.pill b{font-family:"Lilita One";font-weight:400;font-size:17px;color:var(--orange)}
+.dot{width:8px;height:8px;border-radius:50%;background:#2ecc71;box-shadow:0 0 0 4px rgba(46,204,113,.2)}
+.hero h1{font-size:clamp(34px,8vw,60px);line-height:1.02;color:var(--navy);margin:18px auto 10px;max-width:720px}
+.hero h1 em{font-style:normal;color:var(--orange)}
+.hero p.lead{font-size:17px;color:#33415c;max-width:520px;margin:0 auto 22px}
+.search{display:flex;gap:8px;max-width:460px;margin:0 auto;background:#fff;border-radius:16px;padding:6px;box-shadow:0 6px 0 var(--navy);border:3px solid var(--navy);position:relative;z-index:2}
+.search .at{display:flex;align-items:center;padding-left:10px;font-family:"Lilita One";font-size:22px;color:var(--muted)}
+.search input{flex:1;min-width:0;border:0;outline:0;font:inherit;font-size:18px;font-weight:700;padding:10px 4px;background:transparent;color:var(--ink)}
+.btn{border:0;border-radius:12px;padding:12px 18px;font-size:17px;background:var(--orange);color:#fff;box-shadow:0 4px 0 #b35f00;transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #b35f00}
+.btn.ghost{background:#fff;color:var(--navy);box-shadow:0 4px 0 var(--navy);border:2px solid var(--navy)}
+.btn.navy{background:var(--navy);box-shadow:0 4px 0 #0b1a2e}
+.captcha{display:flex;justify-content:center;margin-top:10px;position:relative;z-index:2}
+.captcha:empty{margin:0}
+.hint{font-size:13px;color:var(--muted);margin-top:12px;position:relative;z-index:2}
+.err{color:#c0392b;font-weight:800;font-size:14px;margin-top:10px;min-height:18px;position:relative;z-index:2}
+
+/* result */
+.result{max-width:520px;margin:0 auto;padding:6px 18px 10px;display:none}
+.result.on{display:block;animation:pop .35s ease}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
+.welcome{text-align:center;margin:8px 0 14px}
+.welcome h2{font-size:26px;color:var(--navy)}
+.welcome p{color:var(--muted);font-weight:700}
+
+.idcard{background:#fff;border-radius:20px;border:3px solid var(--navy);box-shadow:0 7px 0 var(--navy);overflow:hidden}
+.idcard .top{background:var(--navy);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
+.card-title{font-size:15px;letter-spacing:.8px}
+.idcard .top small{font-size:11px;opacity:.75;font-weight:800;letter-spacing:1px}
+.idcard .body{display:flex;gap:14px;padding:16px;position:relative}
+.avatar{width:112px;height:140px;flex:none;border-radius:14px;background:linear-gradient(180deg,#cfe8ff,#a9d6f5);border:2px solid #d8e2ef;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+.fields{flex:1;min-width:0;display:grid;gap:7px;align-content:start}
+.f label{display:block;font-size:10.5px;font-weight:800;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.f div{font-weight:800;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.num{font-size:28px!important;color:var(--orange);line-height:1}
+.stamp{position:absolute;right:12px;bottom:10px;width:64px;height:64px;border:3px solid rgba(251,133,0,.55);border-radius:50%;color:rgba(251,133,0,.75);font-family:"Lilita One";font-size:10px;display:flex;align-items:center;justify-content:center;text-align:center;transform:rotate(-14deg);line-height:1.05}
+.idcard .bottom{border-top:2px dashed #d8e2ef;padding:9px 16px;font-size:12px;color:var(--muted);font-weight:700;display:flex;justify-content:space-between}
+.actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.actions .btn{flex:1;min-width:150px}
+
+/* sections */
+section.block{max-width:880px;margin:0 auto;padding:36px 18px}
+section.block h2{font-size:30px;color:var(--navy);text-align:center;margin-bottom:6px}
+section.block .sub{text-align:center;color:var(--muted);font-weight:700;margin-bottom:22px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.step{background:#fff;border-radius:18px;padding:18px;border:2px solid #e6dcc4;box-shadow:0 4px 0 #e6dcc4}
+.step .n{width:38px;height:38px;border-radius:10px;background:var(--sun);font-family:"Lilita One";font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:inset -4px -4px 0 var(--orange);margin-bottom:10px}
+.step h3{font-size:19px;color:var(--navy);margin-bottom:4px}
+.step p{color:#33415c;font-size:15px}
+.cta{background:var(--navy);color:#fff;border-radius:22px;padding:26px 20px;text-align:center}
+.cta h2{color:#fff!important}
+.cta p{opacity:.85;margin:6px 0 16px;font-weight:700}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:24px 16px 40px;font-weight:700}
+.demo-badge{display:inline-block;background:#ffe8a3;color:#7a5200;border-radius:8px;padding:3px 8px;font-size:12px;font-weight:800;margin-top:8px}
+
+/* map */
+#view-mapa{position:fixed;inset:52px 0 0 0;background:var(--sky)}
+#view-mapa:not(.on){display:none}
+#map3d{position:absolute;inset:0;touch-action:none}
+#map3d canvas{display:block}
+.map-ui{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:center;pointer-events:none;z-index:3}
+.map-ui .search{pointer-events:auto;width:100%;max-width:420px;box-shadow:0 5px 0 var(--navy)}
+.map-ui .search .btn{padding:10px 14px;font-size:15px}
+.map-msg{position:absolute;top:76px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:8px 14px;border-radius:12px;font-weight:800;font-size:14px;z-index:3;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90%;text-align:center}
+.map-msg.on{opacity:1}
+.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:"Lilita One";font-size:22px;color:var(--navy);z-index:2}
+.tag{position:absolute;z-index:3;transform:translate(-50%,-100%);background:#fff;border:2px solid var(--navy);border-radius:10px;padding:3px 9px;font-weight:800;font-size:13px;white-space:nowrap;pointer-events:none;box-shadow:0 3px 0 var(--navy);display:none}
+.house-card{position:absolute;left:12px;right:12px;bottom:14px;margin:0 auto;max-width:420px;background:#fff;border:3px solid var(--navy);border-radius:18px;box-shadow:0 6px 0 var(--navy);padding:12px;display:none;gap:12px;align-items:center;z-index:4}
+.house-card.on{display:flex;animation:pop .25s ease}
+.house-card .avatar{width:64px;height:80px;border-radius:10px}
+.house-card .info{flex:1;min-width:0}
+.house-card .info b{font-family:"Lilita One";font-weight:400;font-size:20px;color:var(--orange)}
+.house-card .info div{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.house-card .info small{color:var(--muted);font-weight:700}
+.house-card .x{position:absolute;top:6px;right:10px;border:0;background:none;font-size:20px;color:var(--muted)}
+.house-card .btn{font-size:14px;padding:9px 12px}
+.legend{position:absolute;left:12px;bottom:14px;background:rgba(255,255,255,.9);border-radius:12px;padding:7px 11px;font-size:12px;font-weight:800;color:var(--navy);z-index:2}
+.legend span{color:var(--orange)}
+@media (max-width:420px){
+  .avatar{width:92px;height:118px}
+  .num{font-size:24px!important}
+  .nav a.tab{padding:7px 9px}
+}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="#inicio"><i></i>Blocolândia</a>
+  <a class="tab" data-tab="inicio" href="#inicio">Início</a>
+  <a class="tab" data-tab="mapa" href="#mapa">Mapa 3D</a>
+  <a class="tab" href="#inicio" id="lojaTab" title="Em breve">Loja<span class="soon">breve</span></a>
+</nav>
+
+<!-- ============ INÍCIO ============ -->
+<main id="view-inicio" class="view">
+  <header class="hero">
+    <span class="pill"><span class="dot"></span><b id="count">0</b> moradores na cidade</span>
+    <h1>Seguiu, <em>mudou</em>.<br>Sua casa já tá te esperando.</h1>
+    <p class="lead">Quem segue a <b>@cidadeblocolandia</b> vira morador oficial: ganha um boneco, uma casa no mapa e a carteirinha numerada.</p>
+    <form class="search" id="formHome" autocomplete="off">
+      <span class="at">@</span>
+      <input id="handleHome" placeholder="seu.usuario" maxlength="30" inputmode="text" autocapitalize="off" spellcheck="false">
+      <button class="btn" type="submit">Pegar minha casa</button>
+    </form>
+    <div id="captcha" class="captcha"></div>
+    <div class="err" id="errHome"></div>
+    <p class="hint">Digite o @ igualzinho ao do seu perfil. Já é morador? Digite de novo pra ver sua carteirinha.</p>
+    <div class="blocks" aria-hidden="true"></div>
+  </header>
+
+  <div class="result" id="result">
+    <div class="welcome">
+      <h2 id="welcomeTitle">Bem-vindo à cidade!</h2>
+      <p id="welcomeSub">Essa é a sua carteirinha de morador.</p>
+    </div>
+    <div class="idcard" id="idcard">
+      <div class="top"><span class="card-title">CIDADE BLOCOLÂNDIA</span><small>CARTEIRA DE MORADOR</small></div>
+      <div class="body">
+        <div class="avatar" id="cardAvatar"></div>
+        <div class="fields">
+          <div class="f"><label>Morador nº</label><div class="num" id="cardNum">—</div></div>
+          <div class="f"><label>Perfil</label><div id="cardHandle">—</div></div>
+          <div class="f"><label>Bairro</label><div id="cardBairro">—</div></div>
+          <div class="f"><label>Endereço</label><div id="cardEnd">—</div></div>
+        </div>
+        <div class="stamp">MORADOR<br>OFICIAL</div>
+      </div>
+      <div class="bottom"><span id="cardSince">Desde —</span><span>blocolândia ✦</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="storyBtn">📸 Postar no story</button>
+      <button class="btn navy" id="goMap">Ver minha casa no mapa</button>
+      <button class="btn ghost" id="copyBtn">Copiar convite</button>
+    </div>
+  </div>
+
+  <section class="block">
+    <h2>Como virar morador</h2>
+    <p class="sub">Três passos e você tem endereço na cidade.</p>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h3>Siga a página</h3><p>Siga a @cidadeblocolandia no Instagram ou no TikTok. É assim que a cidade sabe que você chegou.</p></div>
+      <div class="step"><div class="n">2</div><h3>Pegue sua casa</h3><p>Digite seu @ aqui em cima. Você recebe um número de morador e um lote só seu no mapa.</p></div>
+      <div class="step"><div class="n">3</div><h3>Ajude a cidade crescer</h3><p>Comente nos vídeos e vote nas próximas histórias. Os moradores decidem o que acontece.</p></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="cta">
+      <h2>Passeie pela cidade</h2>
+      <p>Cada casinha é um morador de verdade. Gire, aproxime e procure a sua.</p>
+      <a class="btn" href="#mapa" style="display:inline-block;text-decoration:none">Abrir o mapa 3D</a>
+    </div>
+  </section>
+
+  <footer>
+    Cidade Blocolândia · @cidadeblocolandia<br>
+    <span class="demo-badge">Versão de demonstração: os moradores ficam salvos só neste navegador</span>
+  </footer>
+</main>
+
+<!-- ============ MAPA ============ -->
+<div id="view-mapa" class="view">
+  <div id="map3d"></div>
+  <div class="loading" id="loading">montando os quarteirões…</div>
+  <div class="map-ui">
+    <form class="search" id="formMap" autocomplete="off">
+      <span class="at">@</span>
+      <input id="handleMap" placeholder="procure um morador ou nº" maxlength="30" autocapitalize="off" spellcheck="false">
+      <button class="btn" type="submit">Achar</button>
+    </form>
+  </div>
+  <div class="map-msg" id="mapMsg"></div>
+  <div class="tag" id="tag"></div>
+  <div class="legend" id="legend"><span id="legendCount">0</span> casas · toque numa casa</div>
+  <div class="house-card" id="houseCard">
+    <button class="x" id="closeCard" aria-label="Fechar">×</button>
+    <div class="avatar" id="hcAvatar"></div>
+    <div class="info">
+      <b id="hcNum">nº —</b>
+      <div id="hcHandle">—</div>
+      <small id="hcEnd">—</small>
+    </div>
+    <button class="btn navy" id="hcCard">Carteirinha</button>
+  </div>
+</div>
+
+<script type="module">
+/* ================= Configuração do banco =================
+   Preencha com os dados do seu projeto Supabase (Settings → API).
+   Vazio = modo demonstração (moradores salvos só neste navegador). */
+const CONFIG = {
+  SUPABASE_URL: "https://nmjhdlivjhjiwqrjfrez.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_zyT5sXM5EXkYdirOLXKWeg_wEwYEvy5",
+  TURNSTILE_SITE_KEY: "0x4AAAAAAF-3luhzoUOyimEN",   // captcha da Cloudflare
+  SITE: "cidade-blocolandia.vercel.app"              // aparece na imagem do story
+};
+const ONLINE = !!(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY);
+
+/* ================= Dados e regras ================= */
+const DEMO_COUNT = 1500;          // só no modo demonstração
+const PER_BLOCK = 16;             // 4x4 casas por quarteirão
+const BAIRROS = ["Centro","Vila Tijolo","Jardim Cubo","Parque Pixel","Alto dos Blocos","Vale do Encaixe","Morro da Peça","Lagoa Quadrada","Recanto Lego-Lego","Nova Blocolândia"];
+
+const normalize = s => s.trim().replace(/^@+/,"").toLowerCase();
+const validHandle = h => /^[a-z0-9._]{1,30}$/.test(h);
+function hash(str){ let h = 2166136261; for (const c of str){ h ^= c.charCodeAt(0); h = Math.imul(h,16777619); } return h>>>0; }
+function rng(seed){ return () => { seed = (seed + 0x6D2B79F5)|0; let t = Math.imul(seed ^ seed>>>15, 1|seed); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14)>>>0)/4294967296; }; }
+
+/* --- acesso ao Supabase (funções RPC, sem biblioteca) --- */
+const sbHeaders = () => ({
+  apikey: CONFIG.SUPABASE_ANON_KEY,
+  // chaves antigas (JWT "eyJ…") também vão no Authorization; as novas "sb_publishable_" só no apikey
+  ...(CONFIG.SUPABASE_ANON_KEY.startsWith("eyJ") ? { Authorization: `Bearer ${CONFIG.SUPABASE_ANON_KEY}` } : {}),
+  "Content-Type": "application/json"
+});
+
+/* --- captcha (Cloudflare Turnstile): só aparece se a Cloudflare desconfiar --- */
+let tsToken = null, tsWaiters = [], tsWidget = null;
+function setupCaptcha(){
+  if (!ONLINE || !CONFIG.TURNSTILE_SITE_KEY) return;
+  window.onTurnstileLoad = () => {
+    tsWidget = window.turnstile.render("#captcha", {
+      sitekey: CONFIG.TURNSTILE_SITE_KEY, appearance: "interaction-only", language: "pt-br",
+      callback: t => { tsToken = t; tsWaiters.splice(0).forEach(w => w.ok(t)); },
+      "expired-callback": () => { tsToken = null; },
+      "error-callback": () => { tsWaiters.splice(0).forEach(w => w.fail(new Error("captcha"))); }
+    });
+  };
+  const sc = document.createElement("script");
+  sc.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad";
+  sc.async = true; document.head.appendChild(sc);
+}
+function getCaptchaToken(){
+  if (tsToken){ const t = tsToken; tsToken = null; return Promise.resolve(t); }
+  return new Promise((ok, fail) => {
+    const w = { ok: t => { clearTimeout(timer); tsToken = null; ok(t); }, fail: e => { clearTimeout(timer); fail(e); } };
+    const timer = setTimeout(() => { tsWaiters = tsWaiters.filter(x => x !== w); fail(new Error("captcha")); }, 30000);
+    tsWaiters.push(w);
+  });
+}
+const resetCaptcha = () => { try { if (tsWidget != null) window.turnstile.reset(tsWidget); } catch {} };
+
+async function rpc(fn, args = {}){
+  const r = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: sbHeaders(),
+    body: JSON.stringify(args)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+const toRes = r => r ? { n: r.numero, h: r.handle, since: r.criado_em } : null;
+
+/* --- modo demonstração --- */
+const mem = {};
+const store = {
+  get(k){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : (mem[k] ?? null); }catch{ return mem[k] ?? null; } },
+  set(k,v){ mem[k]=v; try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+};
+let registry = ONLINE ? {} : (store.get("bl_registry") || {}); // handle -> {n, since}
+const demoHandle = n => { if (n <= DEMO_COUNT) return "morador." + String(n).padStart(4,"0"); for (const [h,v] of Object.entries(registry)) if (v.n === n) return h; return null; };
+function demoFind(h){
+  if (registry[h]) return { n: registry[h].n, h, since: registry[h].since };
+  const m = h.match(/^morador\.(\d{1,4})$/); if (m){ const n = +m[1]; if (n>=1 && n<=DEMO_COUNT) return { n, h, since:null }; }
+  return null;
+}
+
+/* --- API única usada pelo resto da página --- */
+const cache = new Map(); // nº -> morador
+const remember = r => { if (r) cache.set(r.n, r); return r; };
+const api = ONLINE ? {
+  total:    async () => +(await rpc("total_moradores")) || 0,
+  claim:    async h => {
+    const found = toRes((await rpc("buscar_morador", { p_handle: h }))[0]);   // já é morador? não precisa de captcha
+    if (found) return { ...remember(found), isNew:false };
+    const token = await getCaptchaToken();
+    try {
+      const r = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/pegar-casa`, { method:"POST", headers: sbHeaders(), body: JSON.stringify({ handle: h, token }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || "erro");
+      return { ...remember(toRes(d)), isNew: !!d.novo };
+    } finally { resetCaptcha(); }
+  },
+  find:     async h => remember(toRes((await rpc("buscar_morador", { p_handle: h }))[0])),
+  byNumber: async n => cache.get(n) || remember(toRes((await rpc("morador_por_numero", { p_numero: n }))[0]))
+} : {
+  total:    async () => DEMO_COUNT + Object.keys(registry).length,
+  claim:    async h => { const f = demoFind(h); if (f) return { ...f, isNew:false };
+                         const n = DEMO_COUNT + Object.keys(registry).length + 1; registry[h] = { n, since: new Date().toISOString() };
+                         store.set("bl_registry", registry); return { n, h, since: registry[h].since, isNew:true }; },
+  find:     async h => demoFind(h),
+  byNumber: async n => { const h = demoHandle(n); return h ? (demoFind(h) || { n, h, since:null }) : null; }
+};
+let TOTAL = 0;
+async function refreshTotal(){ try { TOTAL = await api.total(); } catch(e){ console.error(e); } return TOTAL; }
+const totalResidents = () => TOTAL;
+
+/* espiral quadrada: quarteirão 0 é a praça da prefeitura, novos moradores vão ocupando para fora */
+function spiral(n){ n += 1; if (n===1) return [0,0]; const k = Math.ceil((Math.sqrt(n)-1)/2); let t = 2*k+1, m = t*t; t -= 1;
+  if (n >= m-t) return [k-(m-n), -k]; m -= t; if (n >= m-t) return [-k, -k+(m-n)]; m -= t; if (n >= m-t) return [-k+(m-n), k]; return [k, k-(m-n-t)]; }
+function addressOf(n){
+  const i = n-1, block = Math.floor(i/PER_BLOCK)+1, slot = i%PER_BLOCK;
+  const [bx,bz] = spiral(block); const ring = Math.max(Math.abs(bx),Math.abs(bz));
+  return { block, slot, bx, bz, bairro: BAIRROS[Math.min(ring, BAIRROS.length-1)], quadra: block, lote: slot+1 };
+}
+
+/* boneco de blocos gerado a partir do @ */
+const SKINS=["#f2c7a5","#e0a77f","#c68642","#8d5524","#ffdbac","#a0673c"];
+const HAIRS=["#2b1b10","#5a3825","#d9a441","#111","#b5562b","#7b7b7b","#3a6ee8","#e84393"];
+const SHIRTS=["#e63946","#2a9d8f","#f4a261","#457b9d","#8338ec","#06d6a0","#ff006e","#fb8500","#3a86ff","#264653"];
+const PANTS=["#1d3557","#3d405b","#6b4f3a","#2b2d42","#495057"];
+function look(h){ const r = rng(hash(h)); const p = a => a[Math.floor(r()*a.length)];
+  return { skin:p(SKINS), hair:p(HAIRS), shirt:p(SHIRTS), pants:p(PANTS), style:Math.floor(r()*3), glasses:r()<.25, wall:p(["#ffd6a5","#fdffb6","#caffbf","#9bf6ff","#a0c4ff","#ffc6ff","#ffadad","#ffffff","#e9c46a","#f1faee"]), roof:p(["#e63946","#bc4749","#264653","#6d597a","#2a9d8f","#e76f51","#355070"]) }; }
+function avatarSVG(h){
+  const L = look(h);
+  const hair = [
+    `<rect x="26" y="14" width="48" height="12" fill="${L.hair}"/>`,
+    `<rect x="24" y="12" width="52" height="14" fill="${L.hair}"/><rect x="24" y="26" width="8" height="18" fill="${L.hair}"/><rect x="68" y="26" width="8" height="18" fill="${L.hair}"/>`,
+    `<rect x="26" y="10" width="48" height="16" rx="2" fill="${L.hair}"/><rect x="40" y="6" width="20" height="6" fill="${L.hair}"/>`][L.style];
+  const glasses = L.glasses ? `<rect x="33" y="35" width="13" height="10" fill="none" stroke="#111" stroke-width="2.5"/><rect x="54" y="35" width="13" height="10" fill="none" stroke="#111" stroke-width="2.5"/><rect x="46" y="39" width="8" height="2.5" fill="#111"/>` : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 125" width="100%" height="100%" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+    <rect x="26" y="14" width="48" height="44" fill="${L.skin}"/>${hair}
+    <rect x="36" y="37" width="7" height="7" fill="#1b1b1b"/><rect x="57" y="37" width="7" height="7" fill="#1b1b1b"/>${glasses}
+    <rect x="42" y="49" width="16" height="3.5" fill="#7a3b2e"/>
+    <rect x="22" y="60" width="56" height="40" fill="${L.shirt}"/>
+    <rect x="10" y="60" width="12" height="34" fill="${L.shirt}"/><rect x="78" y="60" width="12" height="34" fill="${L.shirt}"/>
+    <rect x="10" y="94" width="12" height="8" fill="${L.skin}"/><rect x="78" y="94" width="12" height="8" fill="${L.skin}"/>
+    <rect x="22" y="100" width="27" height="25" fill="${L.pants}"/><rect x="51" y="100" width="27" height="25" fill="${L.pants}"/>
+    <rect x="22" y="60" width="56" height="5" fill="rgba(0,0,0,.12)"/></svg>`;
+}
+
+const fmtN = n => n.toLocaleString("pt-BR");
+const fmtNice = n => n.toLocaleString("pt-BR");
+
+/* ================= Navegação ================= */
+let pendingFocus = null;
+function route(){
+  const v = (location.hash.replace("#","") || "inicio");
+  const view = v === "mapa" ? "mapa" : "inicio";
+  document.querySelectorAll(".view").forEach(e => e.classList.toggle("on", e.id === "view-"+view));
+  document.querySelectorAll(".nav a.tab[data-tab]").forEach(a => a.classList.toggle("on", a.dataset.tab === view));
+  if (view === "mapa") openMap(); else window.scrollTo(0,0);
+}
+addEventListener("hashchange", route);
+document.getElementById("lojaTab").addEventListener("click", e => { e.preventDefault(); toast("A loja abre em breve 🛠️"); });
+
+/* ================= Início ================= */
+const countEl = document.getElementById("count");
+function animateCount(){ const target = totalResidents(); const start = performance.now(), from = 0;
+  const step = t => { const k = Math.min(1,(t-start)/900); countEl.textContent = fmtNice(Math.round(from + (target-from)*(1-Math.pow(1-k,3)))); if (k<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step); }
+refreshTotal().then(animateCount);
+document.querySelector(".hero .blocks").innerHTML = [38,58,30,70,46,26,62,40,54,34].map(h=>`<span style="height:${h}px"></span>`).join("");
+
+let current = null;
+function showCard(res, isNew){
+  const { h, n } = res; const a = addressOf(n); const since = res.since ? new Date(res.since) : null;
+  current = res;
+  document.getElementById("cardAvatar").innerHTML = avatarSVG(h);
+  document.getElementById("cardNum").textContent = fmtN(n);
+  document.getElementById("cardHandle").textContent = "@" + h;
+  document.getElementById("cardBairro").textContent = a.bairro;
+  document.getElementById("cardEnd").textContent = `Quadra ${a.quadra}, lote ${a.lote}`;
+  document.getElementById("cardSince").textContent = n === 1 && ONLINE ? "Prefeito da cidade" : since ? "Desde " + since.toLocaleDateString("pt-BR") : "Morador fundador";
+  document.getElementById("welcomeTitle").textContent = isNew ? "Bem-vindo à cidade! 🎉" : "Que bom te ver de novo!";
+  document.getElementById("welcomeSub").textContent = isNew ? `Você é o morador nº ${fmtNice(n)}. Sua casa já tá no mapa.` : "Essa é a sua carteirinha de morador.";
+  const r = document.getElementById("result"); r.classList.remove("on"); void r.offsetWidth; r.classList.add("on");
+  setTimeout(()=> r.scrollIntoView({behavior:"smooth", block:"start"}), 60);
+}
+document.getElementById("formHome").addEventListener("submit", async e => {
+  e.preventDefault();
+  const h = normalize(document.getElementById("handleHome").value), err = document.getElementById("errHome");
+  const btn = e.target.querySelector("button");
+  if (!validHandle(h)){ err.textContent = h ? "Use só letras, números, ponto e _ (até 30)." : "Digite o seu @ primeiro 🙂"; return; }
+  err.textContent = ""; btn.disabled = true; const label = btn.textContent; btn.textContent = "Procurando…";
+  try {
+    const r = await api.claim(h);
+    if (r.isNew){ TOTAL = Math.max(TOTAL, r.n); animateCount(); }
+    showCard(r, r.isNew);
+  } catch(ex){ console.error(ex);
+    err.textContent = ex.message === "captcha" ? "Não deu pra confirmar que você é gente de verdade 🤖 Tenta de novo." : "A cidade não respondeu agora. Tenta de novo em instantes."; }
+  finally { btn.disabled = false; btn.textContent = label; }
+});
+document.getElementById("goMap").addEventListener("click", () => { if (current){ pendingFocus = current.n; TOTAL = Math.max(TOTAL, current.n); } location.hash = "mapa"; });
+document.getElementById("copyBtn").addEventListener("click", async () => {
+  if (!current) return;
+  const txt = `Agora eu moro na Cidade Blocolândia! Sou o morador nº ${fmtNice(current.n)} 🏠 Segue a @cidadeblocolandia e pega a sua casa também.`;
+  try { await navigator.clipboard.writeText(txt); toast("Convite copiado!"); } catch { toast("Não deu pra copiar aqui"); }
+});
+
+/* ================= Imagem para story ================= */
+function rr(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function fit(ctx, text, max, size, font, weight = ""){ let s = size; do { ctx.font = `${weight} ${s}px ${font}`.trim(); s -= 2; } while (ctx.measureText(text).width > max && s > 16); }
+const loadImg = src => new Promise((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fail; i.src = src; });
+async function makeStory(res){
+  try { await Promise.all([document.fonts.load('80px "Lilita One"'), document.fonts.load('800 40px Nunito')]); } catch {}
+  const W = 1080, H = 1920, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+  const LF = '"Lilita One", Nunito, sans-serif', NF = 'Nunito, sans-serif', a = addressOf(res.n);
+  // céu
+  const g = x.createLinearGradient(0,0,0,H); g.addColorStop(0,"#8ecae6"); g.addColorStop(.6,"#bde0fe"); g.addColorStop(1,"#fff8e7"); x.fillStyle = g; x.fillRect(0,0,W,H);
+  // prédios ao fundo
+  x.fillStyle = "rgba(29,53,87,.18)"; [380,520,300,640,450,260,580,400,500,340,610].forEach((h,i) => x.fillRect(i*100-10, H-h, 86, h));
+  // título
+  x.textAlign = "center"; x.fillStyle = "#1d3557"; x.font = `64px ${LF}`; x.fillText("EU MORO NA", W/2, 230);
+  x.fillStyle = "#fb8500"; fit(x, "CIDADE BLOCOLÂNDIA", 960, 100, LF); x.fillText("CIDADE BLOCOLÂNDIA", W/2, 345);
+  // carteirinha
+  const cx = 90, cy = 450, cw = 900, ch = 860;
+  x.fillStyle = "#1d3557"; rr(x, cx, cy+18, cw, ch, 44); x.fill();
+  x.fillStyle = "#fff"; rr(x, cx, cy, cw, ch, 44); x.fill(); x.lineWidth = 8; x.strokeStyle = "#1d3557"; x.stroke();
+  x.save(); rr(x, cx, cy, cw, ch, 44); x.clip(); x.fillStyle = "#1d3557"; x.fillRect(cx, cy, cw, 120); x.restore();
+  x.fillStyle = "#fff"; x.textAlign = "left"; x.font = `46px ${LF}`; x.fillText("CARTEIRA DE MORADOR", cx+50, cy+78);
+  x.fillStyle = "#ffb703"; rr(x, cx+cw-110, cy+32, 56, 56, 12); x.fill(); x.fillStyle = "#fb8500"; x.fillRect(cx+cw-110+38, cy+32+38, 18, 18);
+  // boneco
+  const ax = cx+50, ay = cy+170, aw = 330, ah = 420;
+  const ag = x.createLinearGradient(0, ay, 0, ay+ah); ag.addColorStop(0,"#cfe8ff"); ag.addColorStop(1,"#a9d6f5");
+  x.fillStyle = ag; rr(x, ax, ay, aw, ah, 30); x.fill();
+  try { const svg = avatarSVG(res.h).replace('width="100%" height="100%"', 'width="400" height="500"');
+        const img = await loadImg("data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg));
+        x.save(); rr(x, ax, ay, aw, ah, 30); x.clip(); x.drawImage(img, ax+15, ay+28, 300, 375+17); x.restore(); } catch(e){ console.error(e); }
+  // dados
+  const fx = ax + aw + 50, fw = cx + cw - fx - 40; let fy = cy + 200;
+  const label = t => { x.fillStyle = "#5c677d"; x.font = `800 30px ${NF}`; x.fillText(t, fx, fy); };
+  label("MORADOR Nº"); fy += 112; x.fillStyle = "#fb8500"; fit(x, fmtNice(res.n), fw, 120, LF); x.fillText(fmtNice(res.n), fx, fy);
+  fy += 80; label("PERFIL"); fy += 58; x.fillStyle = "#14213d"; fit(x, "@" + res.h, fw, 52, NF, "800"); x.fillText("@" + res.h, fx, fy);
+  fy += 72; label("BAIRRO"); fy += 56; x.fillStyle = "#14213d"; fit(x, a.bairro, fw, 46, LF); x.fillText(a.bairro, fx, fy);
+  fy += 72; label("ENDEREÇO"); fy += 54; x.fillStyle = "#14213d"; fit(x, `Quadra ${a.quadra}, lote ${a.lote}`, fw, 42, LF); x.fillText(`Quadra ${a.quadra}, lote ${a.lote}`, fx, fy);
+  // rodapé da carteirinha + carimbo
+  x.setLineDash([16,12]); x.strokeStyle = "#d8e2ef"; x.lineWidth = 4; x.beginPath(); x.moveTo(cx+30, cy+ch-110); x.lineTo(cx+cw-30, cy+ch-110); x.stroke(); x.setLineDash([]);
+  const since = res.n === 1 && ONLINE ? "Prefeito da cidade" : res.since ? "Morador desde " + new Date(res.since).toLocaleDateString("pt-BR") : "Morador fundador";
+  x.fillStyle = "#5c677d"; x.font = `800 34px ${NF}`; x.fillText(since, cx+50, cy+ch-45);
+  x.save(); x.translate(ax+aw-30, ay+ah-20); x.rotate(-0.25); x.fillStyle = "rgba(255,255,255,.75)"; x.beginPath(); x.arc(0,0,72,0,Math.PI*2); x.fill(); x.strokeStyle = "rgba(251,133,0,.75)"; x.lineWidth = 7; x.stroke();
+  x.fillStyle = "rgba(251,133,0,.9)"; x.textAlign = "center"; x.font = `26px ${LF}`; x.fillText("MORADOR", 0, -2); x.fillText("OFICIAL", 0, 28); x.restore(); x.textAlign = "left";
+  // chamada
+  x.textAlign = "center"; x.fillStyle = "#1d3557"; x.font = `58px ${LF}`; x.fillText("Segue a @cidadeblocolandia", W/2, 1480);
+  x.font = `800 40px ${NF}`; x.fillStyle = "#33415c"; x.fillText("e pega a sua casa também 👇", W/2, 1548);
+  x.font = `48px ${LF}`; const tw = x.measureText(CONFIG.SITE).width + 90;
+  x.fillStyle = "#b35f00"; rr(x, (W-tw)/2, 1600+10, tw, 110, 30); x.fill(); x.fillStyle = "#fb8500"; rr(x, (W-tw)/2, 1600, tw, 110, 30); x.fill();
+  x.fillStyle = "#fff"; x.fillText(CONFIG.SITE, W/2, 1672);
+  return new Promise(ok => c.toBlob(ok, "image/png"));
+}
+document.getElementById("storyBtn").addEventListener("click", async e => {
+  if (!current) return; const btn = e.currentTarget, label = btn.textContent; btn.disabled = true; btn.textContent = "Gerando…";
+  try {
+    const blob = await makeStory(current), file = new File([blob], `blocolandia-morador-${current.n}.png`, { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })){
+      try { await navigator.share({ files: [file] }); } catch(ex){ if (ex.name !== "AbortError") throw ex; }
+    } else {
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Imagem baixada! Agora é só postar no story 📸");
+    }
+  } catch(ex){ console.error(ex); toast("Não consegui gerar a imagem aqui 😕"); }
+  finally { btn.disabled = false; btn.textContent = label; }
+});
+
+/* ================= Mapa 3D ================= */
+const mapMsg = document.getElementById("mapMsg"); let msgT;
+function toast(t){ mapMsg.textContent = t; mapMsg.classList.add("on"); clearTimeout(msgT); msgT = setTimeout(()=>mapMsg.classList.remove("on"), 2600);
+  if (!document.getElementById("view-mapa").classList.contains("on")) { const e = document.getElementById("errHome"); e.textContent = t; setTimeout(()=>{ if(e.textContent===t) e.textContent=""; }, 2600); } }
+
+let M = null; // estado do mapa
+async function openMap(){
+  if (!M){
+    try { M = await buildMap(); }
+    catch(e){ document.getElementById("loading").textContent = "Não consegui carregar o 3D neste aparelho 😕"; console.error(e); return; }
+    document.getElementById("loading").style.display = "none";
+  }
+  await refreshTotal(); M.resize(); M.sync();
+  if (pendingFocus){ const n = pendingFocus; pendingFocus = null; setTimeout(()=>M.focus(n), 150); }
+}
+
+async function buildMap(){
+  const THREE = await import("three");
+  const { OrbitControls } = await import("three/addons/controls/OrbitControls.js");
+  const el = document.getElementById("map3d");
+  const renderer = new THREE.WebGLRenderer({ antialias:true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  el.appendChild(renderer.domElement);
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color("#9fd3f0");
+  scene.fog = new THREE.Fog("#9fd3f0", 160, 420);
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.5, 1500);
+  camera.position.set(70, 80, 90);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; controls.maxPolarAngle = 1.32; controls.minDistance = 8; controls.maxDistance = 320;
+  controls.target.set(0,0,0);
+
+  scene.add(new THREE.HemisphereLight("#ffffff", "#7fb069", 1.1));
+  const sun = new THREE.DirectionalLight("#fff3d6", 1.6); sun.position.set(80,140,50); scene.add(sun);
+
+  const HOUSE = 3, BLOCK = 16; // 4 casas de 3u + rua
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(4000,4000), new THREE.MeshLambertMaterial({ color:"#b8c0c8" }));
+  ground.rotation.x = -Math.PI/2; scene.add(ground);
+
+  const CAP = 12000, BLOCK_CAP = Math.ceil(CAP/PER_BLOCK)+2;
+  const lots = new THREE.InstancedMesh(new THREE.BoxGeometry(13.2,0.3,13.2), new THREE.MeshLambertMaterial({ color:"#7cc56b" }), BLOCK_CAP);
+  const bodies = new THREE.InstancedMesh(new THREE.BoxGeometry(2,1.7,2), new THREE.MeshLambertMaterial(), CAP);
+  const roofGeo = new THREE.ConeGeometry(1.65,1.1,4); roofGeo.rotateY(Math.PI/4);
+  const roofs = new THREE.InstancedMesh(roofGeo, new THREE.MeshLambertMaterial(), CAP);
+  const doors = new THREE.InstancedMesh(new THREE.BoxGeometry(0.55,0.9,0.08), new THREE.MeshLambertMaterial({ color:"#6b4226" }), CAP);
+  [lots,bodies,roofs,doors].forEach(m => { m.count = 0; scene.add(m); });
+
+  // praça + prefeitura no centro
+  const plaza = new THREE.Group();
+  const mk = (geo,color,x,y,z) => { const m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color })); m.position.set(x,y,z); plaza.add(m); return m; };
+  mk(new THREE.BoxGeometry(13.2,0.3,13.2),"#e9d8a6",0,0.15,0);
+  mk(new THREE.BoxGeometry(7,4,4.5),"#f1faee",0,2.3,-2);
+  mk(new THREE.BoxGeometry(7.6,0.6,5),"#1d3557",0,4.6,-2);
+  mk(new THREE.BoxGeometry(2.2,3,2.2),"#f1faee",0,6.4,-2);
+  const dome = mk(new THREE.ConeGeometry(1.7,1.8,4),"#ffb703",0,8.8,-2); dome.rotation.y = Math.PI/4;
+  for (const x of [-2.6,-0.9,0.9,2.6]) mk(new THREE.BoxGeometry(0.5,3.4,0.5),"#dfe7ec",x,2,0.4);
+  mk(new THREE.CylinderGeometry(0.08,0.08,4),"#555",4.8,2.2,3.5);
+  mk(new THREE.BoxGeometry(1.4,0.9,0.05),"#fb8500",5.5,3.8,3.5);
+  for (const [x,z] of [[-5,4.5],[-5,-5],[5.2,-5],[-2.5,4.8]]){ mk(new THREE.CylinderGeometry(0.2,0.25,1.2),"#7f5539",x,0.9,z); mk(new THREE.ConeGeometry(1.1,2.4,6),"#2d6a4f",x,2.6,z); }
+  scene.add(plaza);
+
+  // marcador da casa selecionada
+  const marker = new THREE.Mesh(new THREE.ConeGeometry(0.7,1.4,4), new THREE.MeshLambertMaterial({ color:"#fb8500", emissive:"#7a3500" }));
+  marker.rotation.x = Math.PI; marker.visible = false; scene.add(marker);
+
+  const dummy = new THREE.Object3D(), col = new THREE.Color();
+  function housePos(n){ const a = addressOf(n); const cx = a.bx*BLOCK, cz = a.bz*BLOCK;
+    const c = a.slot%4, r = Math.floor(a.slot/4); return { x: cx + (c-1.5)*HOUSE, z: cz + (r-1.5)*HOUSE, a }; }
+  let built = 0;
+  function sync(){
+    const total = Math.min(totalResidents(), CAP);
+    for (let n = built+1; n <= total; n++){
+      const i = n-1, { x, z, a } = housePos(n), L = look("casa" + n);
+      const face = (a.slot%4 < 2) ? -1 : 1; // portas viradas para a rua
+      dummy.position.set(x,1.15,z); dummy.rotation.set(0,0,0); dummy.updateMatrix(); bodies.setMatrixAt(i, dummy.matrix); bodies.setColorAt(i, col.set(L.wall));
+      dummy.position.set(x,2.55,z); dummy.updateMatrix(); roofs.setMatrixAt(i, dummy.matrix); roofs.setColorAt(i, col.set(L.roof));
+      dummy.position.set(x + face*1.01, 0.75, z); dummy.rotation.set(0,Math.PI/2,0); dummy.updateMatrix(); doors.setMatrixAt(i, dummy.matrix);
+      if (a.slot === 0){ dummy.position.set(a.bx*BLOCK,0.15,a.bz*BLOCK); dummy.rotation.set(0,0,0); dummy.updateMatrix(); lots.setMatrixAt(a.block-1, dummy.matrix); lots.count = Math.max(lots.count, a.block); }
+    }
+    built = total;
+    bodies.count = roofs.count = doors.count = total;
+    [bodies,roofs,doors,lots].forEach(m => { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; });
+    bodies.computeBoundingSphere(); bodies.computeBoundingBox?.();
+    document.getElementById("legendCount").textContent = fmtNice(total);
+  }
+
+  function resize(){ const w = el.clientWidth || innerWidth, h = el.clientHeight || innerHeight; renderer.setSize(w,h); camera.aspect = w/h; camera.updateProjectionMatrix(); }
+  addEventListener("resize", resize);
+
+  // voo da câmera
+  let fly = null, selected = null;
+  async function focus(n){
+    if (n > built){ sync(); }
+    const { x, z, a } = housePos(n); selected = { n, x, z, res: null };
+    marker.visible = true;
+    const fromT = controls.target.clone(), fromP = camera.position.clone();
+    const toT = new THREE.Vector3(x,1,z), toP = new THREE.Vector3(x+14, 16, z+18);
+    fly = { t0: performance.now(), fromT, fromP, toT, toP };
+    document.getElementById("hcNum").textContent = "nº " + fmtN(n);
+    document.getElementById("hcHandle").textContent = "carregando…";
+    document.getElementById("hcAvatar").innerHTML = "";
+    document.getElementById("hcEnd").textContent = `${a.bairro} · Quadra ${a.quadra}, lote ${a.lote}`;
+    document.getElementById("houseCard").classList.add("on");
+    document.getElementById("legend").style.display = "none";
+    let res = null; try { res = await api.byNumber(n); } catch(e){ console.error(e); }
+    if (!selected || selected.n !== n) return;
+    selected.res = res;
+    document.getElementById("hcAvatar").innerHTML = avatarSVG(res ? res.h : String(n));
+    document.getElementById("hcHandle").textContent = res ? "@" + res.h : "Morador";
+  }
+  document.getElementById("closeCard").addEventListener("click", () => { selected = null; marker.visible = false; document.getElementById("houseCard").classList.remove("on"); document.getElementById("tag").style.display = "none"; document.getElementById("legend").style.display = ""; });
+  document.getElementById("hcCard").addEventListener("click", () => { if (!selected?.res) return; const r = selected.res; location.hash = "inicio"; setTimeout(()=> showCard(r, false), 50); });
+
+  // toque/clique numa casa
+  const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let down = null;
+  renderer.domElement.addEventListener("pointerdown", e => down = { x:e.clientX, y:e.clientY });
+  renderer.domElement.addEventListener("pointerup", e => {
+    if (!down || Math.hypot(e.clientX-down.x, e.clientY-down.y) > 6) return;
+    const r = renderer.domElement.getBoundingClientRect();
+    ptr.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1);
+    ray.setFromCamera(ptr, camera);
+    const hit = ray.intersectObjects([bodies, roofs], false)[0];
+    if (hit && hit.instanceId != null) focus(hit.instanceId + 1);
+  });
+
+  const tag = document.getElementById("tag"), v3 = new THREE.Vector3();
+  const ease = k => 1 - Math.pow(1-k, 3);
+  renderer.setAnimationLoop(t => {
+    if (fly){ const k = Math.min(1, (performance.now()-fly.t0)/1100), e = ease(k);
+      controls.target.lerpVectors(fly.fromT, fly.toT, e); camera.position.lerpVectors(fly.fromP, fly.toP, e); if (k === 1) fly = null; }
+    controls.update();
+    if (selected){
+      marker.position.set(selected.x, 4.4 + Math.sin(t/250)*0.35, selected.z); marker.rotation.y = t/600;
+      v3.set(selected.x, 5.6, selected.z).project(camera);
+      if (v3.z < 1){ tag.style.display = "block"; tag.style.left = ((v3.x+1)/2*el.clientWidth) + "px"; tag.style.top = ((1-v3.y)/2*el.clientHeight + 52) + "px";
+        tag.textContent = selected.res ? "@" + selected.res.h : "nº " + fmtN(selected.n); } else tag.style.display = "none";
+    }
+    renderer.render(scene, camera);
+  });
+
+  return { resize, sync, focus };
+}
+
+document.getElementById("formMap").addEventListener("submit", async e => {
+  e.preventDefault(); if (!M) return;
+  const inp = document.getElementById("handleMap"), raw = inp.value.trim();
+  const asNum = raw.replace(/^(#|n[ºo°]?\s*)/i,"").replace(/\./g,"");
+  if (/^\d+$/.test(asNum)){ const n = +asNum; if (n>=1 && n<=totalResidents()){ M.focus(n); inp.blur(); } else toast("Esse número ainda não tem morador"); return; }
+  const h = normalize(raw); if (!h) return;
+  try {
+    const r = await api.find(h);
+    if (r){ if (r.n > TOTAL){ TOTAL = r.n; M.sync(); } M.focus(r.n); inp.blur(); }
+    else toast("@" + h + " ainda não tem casa. Pegue a sua na página inicial!");
+  } catch(ex){ console.error(ex); toast("A cidade não respondeu agora. Tenta de novo."); }
+});
+
+if (ONLINE) document.querySelector(".demo-badge")?.remove();
+setupCaptcha();
+route();
+</script>
+</body>
+</html>
